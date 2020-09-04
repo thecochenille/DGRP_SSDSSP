@@ -1,0 +1,330 @@
+---
+title: "Austin_DGRP_April2020"
+author: "Isabelle Vea"
+date: "14/04/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+require(ggplot2)
+require(car)
+require(reshape2)
+require(data.table)
+require(plyr)
+require(lme4)
+require(lmerTest)
+require(nlme)
+require(stringr)
+require(afex) #allows to retrieve p-values from lm4 function
+require(stringr)
+require(tidyr)
+require(qqman)
+require(tibble)
+#devtools::install_github("variani/lme4qtl")
+#require(lme4qtl)
+require(lattice)
+require(snow)
+require(Rmpi)
+require(ggfortify)
+require(rapport)
+require(pbapply)
+require(svMisc)
+```
+
+```{r}
+setwd("/Users/isabelle/Downloads/DGRP-June2020/Sept2020/")
+
+df<-read.csv("/Users/isabelle/Downloads/DGRP-June2020/Sept2020/DGRPfinal_clean.csv")
+
+head(df)
+names(df)
+#changing lineage and day of starvation as character
+
+
+df$Cline<-as.character(df$line)
+df$Cday_of_starvation<-as.character(df$day_of_starvation)
+
+typeof(df$line)
+typeof(df$Cline)
+
+```
+
+```{r}
+#subset experiment flies
+df<-subset(df, df$control_experiment == 'EXPERIMENT')
+head(df)
+```
+
+
+## Overall SSD regardless of treatment
+```{r}
+head(df)
+t.test(df$lnpupa ~ df$sex)
+f<-subset(df, df$sex == 'F')
+m<-subset(df, df$sex == 'M')
+
+summary(f$lnpupa) #mean 14.45
+summary(m$lnpupa) #mean 14.38
+
+```
+
+## SSD by day starvation
+
+```{r}
+#SSD 0
+SSD0<-subset(df, df$day_of_starvation ==0)
+t.test(SSD0$lnpupa ~ SSD0$sex)
+
+
+SSD1<-subset(df, df$day_of_starvation ==1)
+t.test(SSD1$lnpupa ~ SSD1$sex)
+
+
+SSD2<-subset(df, df$day_of_starvation ==2)
+t.test(SSD2$lnpupa ~ SSD2$sex)
+
+In all day after starvation, females are larger than males on average
+
+```
+
+
+
+
+```{r}
+#wing plot
+dfplot<- ggplot(df,aes(x=as.factor(Cday_of_starvation),y=log(df$wing)))+ 
+  geom_boxplot(width=0.5, size=0.2, outlier.size = 0.1, aes(fill=sex)) + 
+  geom_jitter(aes(color=sex),position=position_jitterdodge(dodge.width=0.5,jitter.width = 0),size=0.5) +
+  theme_classic(base_size = 12) +
+  #scale_fill_manual(name="", # Legend label, use darker colors
+                  #breaks=c("Virgin methanol", "Mated","JHM"),
+                  #labels=c("A","B", "C"),
+                  #values=c("#2E9FDF","#FF0000","#E7B800")) +
+  scale_color_manual(values =c("black","black")) +
+  theme(strip.background=element_rect(fill="black"))+ 
+  theme(strip.text=element_text(color="white", face="bold"))+
+  facet_wrap(. ~ Cline)
+dfplot
+
+```
+
+#Anova
+
+```{r}
+names(df)
+head(df)
+
+```
+
+## Anova on lnwing by sex, day of starvation and lineage with interaction
+```{r}
+lm1<-lm(lnwing ~ sex * Cday_of_starvation * Cline, data = df)
+Anova(lm1)
+
+```
+
+## Anova on lnleg by sex, day of starvation and lineage with interaction
+```{r}
+lm2<-lm(lnleg ~ sex * Cday_of_starvation * Cline, data = df)
+Anova(lm2)
+
+```
+
+
+## Anova on lnwing by sex, day of starvation as integer and lineage with interaction
+```{r}
+lm1B<-lm(lnwing ~ sex * day_of_starvation * Cline, data = df)
+Anova(lm1B)
+
+```
+
+##SSP day 0 and day 1
+
+```{r}
+df01<-subset(df, day_of_starvation <=1)
+lm1d<-lm(lnwing ~ sex * Cday_of_starvation * Cline, data = df01)
+Anova(lm1d)
+
+lm1e<-lm(lnwing ~ sex * day_of_starvation * Cline, data = df01)
+Anova(lm1e)
+```
+
+
+##Test for SSD
+
+```{r}
+df0<-subset(df,day_of_starvation == 0)
+
+lm1c<-lm(lnwing ~ sex * Cline, data = df0)
+Anova(lm1c)
+
+
+lm2c<-lm(lnleg~ sex * Cline, data = df0)
+Anova(lm2c)
+```
+
+If using day of starvation as an integer, the interaction is not significant
+
+
+
+#subsetting by day 0 and Day 1 of starvation only
+
+```{r}
+unique(df$day_of_starvation)
+df2<-subset(df, day_of_starvation < 2)
+unique(df2$day_of_starvation)
+unique(df2$Cday_of_starvation)
+```
+
+```{r}
+lm4<-lm(lnwing ~ sex * Cday_of_starvation * Clineage, data = df2)
+Anova(lm4)
+
+```
+
+```{r}
+lm5<-lm(lnwing ~ sex * Cday_of_starvation * Clineage, data = df2)
+Anova(lm5)
+
+```
+
+
+```{r}
+df0<-subset(df,day_of_starvation ==0)
+head(df0)
+#wing plot
+dfplot<- ggplot(df0,aes(x=sex,y=log(df0$wing)))+ 
+  geom_boxplot(width=0.3, size=0.2, outlier.size = 0.1, aes(fill=sex)) + 
+  geom_jitter(aes(color=sex),position=position_jitterdodge(dodge.width=0.5,jitter.width = 0),size=0.5) +
+  theme_classic(base_size = 12) +
+  #scale_fill_manual(name="", # Legend label, use darker colors
+                  #breaks=c("Virgin methanol", "Mated","JHM"),
+                  #labels=c("A","B", "C"),
+                  #values=c("#2E9FDF","#FF0000","#E7B800")) +
+  scale_color_manual(values =c("black","black")) +
+  theme(strip.background=element_rect(fill="black"))+ 
+  theme(strip.text=element_text(color="white", face="bold"))+
+  facet_wrap(. ~ line)
+dfplot
+
+```
+
+```{r}
+df0<-subset(df,day_of_starvation ==0)
+head(df0)
+#wing plot
+dfplot<- ggplot(df0,aes(x=sex,y=log(df0$leg)))+ 
+  geom_boxplot(width=0.3, size=0.2, outlier.size = 0.1, aes(fill=sex)) + 
+  geom_jitter(aes(color=sex),position=position_jitterdodge(dodge.width=0.5,jitter.width = 0),size=0.5) +
+  theme_classic(base_size = 12) +
+  scale_fill_manual(name="", # Legend label, use darker colors
+                  breaks=c("M", "F"),
+                  labels=c("M","F"),
+                  values=c("#ef8a62","#67a9cf")) +
+  scale_color_manual(values =c("black","black")) +
+  theme(strip.background=element_rect(fill="black"))+ 
+  theme(strip.text=element_text(color="white", face="bold"))+
+  facet_wrap(. ~ line)
+dfplot
+
+```
+
+
+SSD and SSP correlation
+
+```{r}
+SSPSSD<-read.csv(("SSP01_SSD_Aug032020.csv"))
+head(SSPSSD)
+
+
+library("ggpubr")
+ggscatter(SSPSSD, x = "SSD_wing", y = "SSP_1_0_wing", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "Wing Sexual Size Dimorphism",
+          ylab = "Wing Sex Specific Plasticity")
+
+
+```
+
+
+
+## FDR for wing
+```{R}
+out<- read.csv("/Users/isabelle/Downloads/DGRP-June2020/July2020_data/DGRP2_outputs/wing_DGRP_malefem/ch_pos_mixedpval.txt", sep=' ')
+
+head(out)
+
+out$BH<-p.adjust(out$DiffMixedPval, method="BH")
+
+out$BONF<-p.adjust(out$DiffMixedPval, method="bonferroni")
+
+ordered_out <- out[order( out['BONF'] ),]
+ordered_out <- out[order( out['BH'] ),]
+ordered_out <- out[order( out['DiffMixedPval'] ),]
+
+
+head(out)
+
+```
+
+
+#FDR by chromosome
+
+```{r}
+outwingSSD<- read.csv("/Users/isabelle/Downloads/DGRP-June2020/July2020_data/DGRP2_outputs/wing_DGRP_malefem/ch_pos_mixedpval.txt", sep=' ')
+head(outwingSSD)
+outwingSSD_2<-subset(outwingSSD, chromosome <=2 )
+outwingSSD_3<-subset(outwingSSD, chromosome >=3 &&chromosome >=4)
+
+outwingSSD_2$BH<-p.adjust(outwingSSD_2$DiffMixedPval, method="BH")
+outwingSSD_2 <- outwingSSD_2[order( outwingSSD_2['BH'] ),]
+
+
+```
+
+
+
+
+## FDR for leg
+```{R}
+outSSD<- read.csv("/Users/isabelle/Downloads/DGRP-June2020/July2020_data/DGRP2_outputs/leg_DGRP2_malefem/ch_pos_DiffMixedPval.txt", sep=' ')
+outSSP<- read.csv("/Users/isabelle/Downloads/DGRP-June2020/July2020_data/DGRP2_outputs/legplasticity-Aug2020/ch_pos_DiffMixedPval.txt", sep=' ')
+
+head(outSSD)
+head(outSSP)
+
+outSSD$BH<-p.adjust(outSSD$DiffMixedPval, method="BH")
+outSSD$BONF<-p.adjust(outSSD$DiffMixedPval, method="bonferroni")
+
+ordered_outSSD_BONF <- outSSD[order( outSSD['BONF'] ),]
+ordered_outSSD_BH <- outSSD[order( outSSD['BH'] ),]
+ordered_outSSDpval <- outSSD[order( outSSD['DiffMixedPval'] ),]
+
+
+outSSP$BH<-p.adjust(outSSP$DiffMixedPval, method="BH")
+outSSP$BONF<-p.adjust(outSSP$DiffMixedPval, method="bonferroni")
+ordered_outSSP_BONF <- outSSP[order( outSSP['BONF'] ),]
+ordered_outSSP_BH <- outSSP[order( outSSP['BH'] ),]
+ordered_outSSPpval <- outSSP[order( outSSP['DiffMixedPval'] ),]
+
+
+
+
+head(out)
+
+```
+
+
+```{r}
+head(SSPSSD)
+plot(data=SSPSSD, male_1_0_wing~female_1_0_wing)
+SSPSSD$exp_SSP_1_0_wing<-exp(SSPSSD$SSP_1_0_wing)
+SSPSSD$exp_SSD_wing<-exp(SSPSSD$SSD_wing)
+
+head(SSPSSD)
+
+
+```

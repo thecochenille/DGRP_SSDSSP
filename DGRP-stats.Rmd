@@ -1,7 +1,7 @@
 ---
-title: "Austin_DGRP_April2020"
+title: "Statistics for DGRP data on SSD and SSP"
 author: "Isabelle Vea"
-date: "14/04/2020"
+date: "14/08/2020"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -34,15 +34,17 @@ require(svMisc)
 ```
 
 ```{r}
-setwd("/Users/isabelle/Downloads/DGRP-June2020/Sept2020/")
+setwd("/Users/isabelle/Dropbox/_Github_reps/DGRP_SSDSSP/")
 
-df<-read.csv("/Users/isabelle/Downloads/DGRP-June2020/Sept2020/DGRPfinal_clean.csv")
+df<-read.csv("/Users/isabelle/Dropbox/_Github_reps/DGRP_SSDSSP/Sept2020/DGRPfinal.csv")
 
 head(df)
 names(df)
+
+```
+
+```{r}
 #changing lineage and day of starvation as character
-
-
 df$Cline<-as.character(df$line)
 df$Cday_of_starvation<-as.character(df$day_of_starvation)
 

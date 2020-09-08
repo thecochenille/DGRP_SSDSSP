@@ -36,7 +36,7 @@ require(svMisc)
 ```{r}
 setwd("/Users/isabelle/Dropbox/_Github_reps/DGRP_SSDSSP/")
 
-df<-read.csv("/Users/isabelle/Dropbox/_Github_reps/DGRP_SSDSSP/Sept2020/DGRPfinal.csv")
+df<-read.csv("/Users/isabelle/Dropbox/_Github_reps/DGRP_SSDSSP/Sept2020/DGRPfinal_clean.csv")
 
 head(df)
 names(df)
@@ -79,15 +79,12 @@ summary(m$lnpupa) #mean 14.38
 SSD0<-subset(df, df$day_of_starvation ==0)
 t.test(SSD0$lnpupa ~ SSD0$sex)
 
-
 SSD1<-subset(df, df$day_of_starvation ==1)
 t.test(SSD1$lnpupa ~ SSD1$sex)
 
-
 SSD2<-subset(df, df$day_of_starvation ==2)
 t.test(SSD2$lnpupa ~ SSD2$sex)
-
-In all day after starvation, females are larger than males on average
+#In all day after starvation, females are larger than males on average
 
 ```
 
@@ -96,19 +93,19 @@ In all day after starvation, females are larger than males on average
 
 ```{r}
 #wing plot
-dfplot<- ggplot(df,aes(x=as.factor(Cday_of_starvation),y=log(df$wing)))+ 
-  geom_boxplot(width=0.5, size=0.2, outlier.size = 0.1, aes(fill=sex)) + 
-  geom_jitter(aes(color=sex),position=position_jitterdodge(dodge.width=0.5,jitter.width = 0),size=0.5) +
-  theme_classic(base_size = 12) +
+#dfplot<- ggplot(df,aes(x=as.factor(Cday_of_starvation),y=log(df$wing)))+ 
+# geom_boxplot(width=0.5, size=0.2, outlier.size = 0.1, aes(fill=sex)) + 
+#  geom_jitter(aes(color=sex),position=position_jitterdodge(dodge.width=0.5,jitter.width = 0),size=0.5) +
+#  theme_classic(base_size = 12) +
   #scale_fill_manual(name="", # Legend label, use darker colors
                   #breaks=c("Virgin methanol", "Mated","JHM"),
                   #labels=c("A","B", "C"),
                   #values=c("#2E9FDF","#FF0000","#E7B800")) +
-  scale_color_manual(values =c("black","black")) +
-  theme(strip.background=element_rect(fill="black"))+ 
-  theme(strip.text=element_text(color="white", face="bold"))+
-  facet_wrap(. ~ Cline)
-dfplot
+#  scale_color_manual(values =c("black","black")) +
+#  theme(strip.background=element_rect(fill="black"))+ 
+#  theme(strip.text=element_text(color="white", face="bold"))+
+#  facet_wrap(. ~ Cline)
+#dfplot
 
 ```
 
@@ -328,5 +325,25 @@ SSPSSD$exp_SSD_wing<-exp(SSPSSD$SSD_wing)
 
 head(SSPSSD)
 
+
+```
+
+
+
+
+#How much of the environment is responsible for female size variation?
+```{r}
+#run Anova of size variation by DGRP line and extract the residuals
+f<-subset(df, df$sex == 'F')
+lmFline<-lm(lnpupa ~ Cline, data = f)
+Anova(lmFline)
+```
+
+#How much of plasticity is responsible for female size variation?
+
+```{r}
+#I need Size plasticity, mean size in females
+
+SSPSSD<-read.csv((""))
 
 ```

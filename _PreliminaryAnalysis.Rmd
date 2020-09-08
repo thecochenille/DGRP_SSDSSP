@@ -12,7 +12,6 @@ suppressPackageStartupMessages({
 require(lmerTest)
 require(lattice) # for some of the simple plots
 require(MCMCglmm) # To get posterior distributions
-library(pbkrtest) # parametric bootstrap.
 require(smatr)
 require(dplyr)
 require(plyr)
@@ -23,49 +22,82 @@ require(ggalt)
 require(varhandle)
 require(magrittr)
 require("ggthemes")
+require(pbkrtest)  # parametric bootstrap
+library(car)
  })
-
+R.version
 ```
 
-Preamble
 
 
+
+#Preamble
 ```{r,message=FALSE, warning=FALSE}
-
-df <- read.csv("~/Documents/Data/DGRP Genetic Architecture/DGRPfinal_clean.csv")
+#dataset was manually relabeled
+df <- read.csv("~/Dropbox/_Github_reps/DGRP_SSDSSP/Sept2020/DGRPfinal_clean_labels.csv")
 summary(df)
+
+#remove all NAs, most functions do not deal with NAs well
 df<-na.omit(df)
+
+#line and day of treatment as categorical
 df$line<-as.factor(df$line)
 df$day<-as.factor(df$day)
 ```
+
 #Is there variation among blocks
+Flies of lineages were collected in different blocks, periods of time. Control lineages were selected and collected repeatedly for each block so that if there is variation, we can account for that factor.
 
 Look at the control lineages to see whether there is variation among blocks
+
 ```{r,message=FALSE, warning=FALSE}
+#subset control lineages
+df0<-subset(df, day =='0')
 dfc<-subset(df0, type=="ct")
-blocktest<-lmer(pupa~sex*block+(1|line), data=dfc)
+dfcf<-subset(dfc, sex=="F")
+dfcm<-subset(dfc, sex=="M")
+
+
+#linear mixed model testing pupa size variation and if block factor has an effect on the variation
+blocktest<-lmer(pupa~block+(1|line), data=dfc)
+Anova(blocktest, type="III")
+
+blocktest2<-lmer(pupa~sex*block+(1|line), data=dfc)
+Anova(blocktest2, type="III")
+
+blocktestF<-lmer(pupa~block+(1|line), data=dfcf)
+Anova(blocktest, type="III")
+
+blocktestM<-lmer(pupa~block+(1|line), data=dfcm)
 Anova(blocktest, type="III")
 ```
+
+There is a difference between collecting blocks so we have to account for block as a random factor, or adjust the values so there is no variation between blocks.
+
 
 #SSD
 
 Is there SSD? Using only fed flies (day=0)
-
+To test if we have sexual size dimorphism, we want to test the effect of size with line and block as random factor. If there is a variation due to sex, that means SSD is present.
 ```{r,message=FALSE, warning=FALSE}
+#subsetting day 0, fed flies
 df0<-subset(df, day==0)
-df0<-na.omit(df0)
+
 SSD<-lmer(pupa~sex+(1|line) +(1|block), data=df0)
 summary(SSD)
 anova(SSD)
 ```
+
 Does SSD vary among lineages?
+Now we want to know if that SSD varies between lines.
 
 ```{r,message=FALSE, warning=FALSE}
-model2<-lmer(pupa~sex+(1|line)+(1|block), data=df0)
-model1<-lmer(pupa~sex+(sex|line)+(1|block), data=df0)
-summary(model1)
+
+model2<-lmer(pupa~sex+(1|line)+(1|block), data=df0)  #previously lmer(pupa~sex+(1|line)+(1|block), data=df0)
+model1<-lmer(pupa~sex+(sex|line)+(1|block), data=df0) #previously lmer(pupa~sex+(sex|line)+(1|block), data=df0)
 anova(model1,model2)
 ```
+
 Do a LRT
 
 ```{r,message=FALSE, warning=FALSE}
@@ -73,6 +105,8 @@ Do a LRT
 (AIC(model2) - REMLcrit(model2))/2 # # of parameters the model "thinks" are being estimated
 
 ```
+
+
 So lme4/lmer is treating model 1 as having two more parameters than model2.
 ```{r,message=FALSE, warning=FALSE}
 LR.model <-  -as.numeric(REMLcrit(model1) - REMLcrit(model2))
@@ -84,7 +118,7 @@ pchisq(q = LR.model, df=nlevels(df$line), lower=F)
 Finally, we can conduct a parametric bootstrap to compare the two models.
 
 ```{r echo=FALSE, message = FALSE, warning=FALSE}
-PBmodcomp(model1, model2, nsim=1000, details = 1)
+pbtest<-PBmodcomp(model1, model2, nsim=1000, details = 1)
 summary(pbtest)
 ```
 
@@ -103,13 +137,39 @@ model1M.MCMC <- MCMCglmm(pupa ~ 1 + sex,
 summary(model1M.MCMC)
 ```
 
+
+
+
 #SSP
 
 Does SSP vary among lineages?
 
 ```{r,message=FALSE, warning=FALSE}
-
+# we want to compare effect of sex and day of starvation on pupal size.
 model2<-lmer(pupa~sex*day+(sex+day|line)+(1|block), data=df)
 model1<-lmer(pupa~sex*day+(sex*day|line)+(1|block), data=df)
 anova(model1,model2)
 ```
+
+
+#Plasticity
+
+Do we have variation in plasticity in females?
+```{r,message=FALSE, warning=FALSE}
+dfcF<-subset(df, df$type == "ct" & df$sex =="F")
+
+dfcM<-subset(df, df$type == "ct" & df$sex =="M")
+
+
+model1F<-lmer(pupa~day+(1|line)+(1|block), data=dfcF)
+model2F<-lmer(pupa~day+(day|line)+(1|block), data=dfcF)
+anova(model1F, model2F)
+
+
+model1M<-lmer(pupa~day+(1|line)+(1|block), data=dfcM)
+model2M<-lmer(pupa~day+(day|line)+(1|block), data=dfcM)
+anova(model1M, model2M)
+```
+
+
+Do we have variation fo plasticity in males?

@@ -117,6 +117,18 @@ head(df)
 
 ```
 
+
+
+#Testing SSD by sex and lineage
+
+```{r}                      
+model1<-lmer(lnpupa~sex+(1|line))
+
+
+```
+
+
+
 ## Anova on lnwing by sex, day of starvation and lineage with interaction
 ```{r}
 lm1<-lm(lnwing ~ sex * Cday_of_starvation * Cline, data = df)

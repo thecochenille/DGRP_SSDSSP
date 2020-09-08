@@ -1,0 +1,115 @@
+---
+title: "DGRP Genetic Arch"
+author: "Alexander Shingleton"
+date: "9/8/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+suppressPackageStartupMessages({
+ require(lme4)
+require(lmerTest)
+require(lattice) # for some of the simple plots
+require(MCMCglmm) # To get posterior distributions
+library(pbkrtest) # parametric bootstrap.
+require(smatr)
+require(dplyr)
+require(plyr)
+require(rrcov)
+require(tibble)
+require(ggplot2)
+require(ggalt)
+require(varhandle)
+require(magrittr)
+require("ggthemes")
+ })
+
+```
+
+Preamble
+
+
+```{r,message=FALSE, warning=FALSE}
+
+df <- read.csv("~/Documents/Data/DGRP Genetic Architecture/DGRPfinal_clean.csv")
+summary(df)
+df<-na.omit(df)
+df$line<-as.factor(df$line)
+df$day<-as.factor(df$day)
+```
+#Is there variation among blocks
+
+Look at the control lineages to see whether there is variation among blocks
+```{r,message=FALSE, warning=FALSE}
+dfc<-subset(df0, type=="ct")
+blocktest<-lmer(pupa~sex*block+(1|line), data=dfc)
+Anova(blocktest, type="III")
+```
+
+#SSD
+
+Is there SSD? Using only fed flies (day=0)
+
+```{r,message=FALSE, warning=FALSE}
+df0<-subset(df, day==0)
+df0<-na.omit(df0)
+SSD<-lmer(pupa~sex+(1|line) +(1|block), data=df0)
+summary(SSD)
+anova(SSD)
+```
+Does SSD vary among lineages?
+
+```{r,message=FALSE, warning=FALSE}
+model2<-lmer(pupa~sex+(1|line)+(1|block), data=df0)
+model1<-lmer(pupa~sex+(sex|line)+(1|block), data=df0)
+summary(model1)
+anova(model1,model2)
+```
+Do a LRT
+
+```{r,message=FALSE, warning=FALSE}
+(AIC(model1) - REMLcrit(model1))/2 # # of parameters the model "thinks" are being estimated
+(AIC(model2) - REMLcrit(model2))/2 # # of parameters the model "thinks" are being estimated
+
+```
+So lme4/lmer is treating model 1 as having two more parameters than model2.
+```{r,message=FALSE, warning=FALSE}
+LR.model <-  -as.numeric(REMLcrit(model1) - REMLcrit(model2))
+LR.model
+nlevels(df$line)
+pchisq(q = LR.model, df=2, lower=F)
+pchisq(q = LR.model, df=nlevels(df$line), lower=F)
+```
+Finally, we can conduct a parametric bootstrap to compare the two models.
+
+```{r echo=FALSE, message = FALSE, warning=FALSE}
+PBmodcomp(model1, model2, nsim=1000, details = 1)
+summary(pbtest)
+```
+
+Finally using Bayesian Analysis
+
+```{r,message=FALSE, warning=FALSE}
+prior.2 <-list(R=list(V=0.01, nu=0.002), 
+               G=list(G1=list(V=0.01*diag(1), nu=0.002),
+                      G2=list(V=0.01*diag(2), nu=0.002)))
+
+model1M.MCMC <- MCMCglmm(pupa ~ 1 + sex, 
+  random=~block + us(1 + sex):line,
+  prior = prior.2, burnin = 5000, nitt = 20000, thin = 10,
+  verbose = F, pr = T,
+  data=df0)
+summary(model1M.MCMC)
+```
+
+#SSP
+
+Does SSP vary among lineages?
+
+```{r,message=FALSE, warning=FALSE}
+
+model2<-lmer(pupa~sex*day+(sex+day|line)+(1|block), data=df)
+model1<-lmer(pupa~sex*day+(sex*day|line)+(1|block), data=df)
+anova(model1,model2)
+```

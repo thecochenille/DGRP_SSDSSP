@@ -75,9 +75,9 @@ Anova(blocktest, type="III")
 There is a difference between collecting blocks so we have to account for block as a random factor, or adjust the values so there is no variation between blocks.
 
 
-#SSD
+# SSD
 
-Is there SSD? Using only fed flies (day=0)
+## Is there SSD? Using only fed flies (day=0)
 To test if we have sexual size dimorphism, we want to test the effect of size with line and block as random factor. If there is a variation due to sex, that means SSD is present.
 ```{r,message=FALSE, warning=FALSE}
 #subsetting day 0, fed flies
@@ -88,7 +88,7 @@ summary(SSD)
 anova(SSD)
 ```
 
-Does SSD vary among lineages?
+## Does SSD vary among lineages?
 Now we want to know if that SSD varies between lines.
 
 ```{r,message=FALSE, warning=FALSE}
@@ -139,6 +139,17 @@ summary(model1M.MCMC)
 
 
 
+### Post model fitting check
+
+#### Residual distribution
+Model 1 residual distribution
+
+```{r,message=FALSE, warning=FALSE}
+plot(model1)
+```
+
+Model 1 residual distribution per random factor
+
 
 #SSP
 
@@ -166,9 +177,7 @@ model2F<-lmer(pupa~day+(day|line)+(1|block), data=dfcF)
 anova(model1F, model2F)
 
 
-model1M<-lmer(pupa~day+(1|line)+(1|block), data=dfcM)
-model2M<-lmer(pupa~day+(day|line)+(1|block), data=dfcM)
-anova(model1M, model2M)
+
 ```
 
 

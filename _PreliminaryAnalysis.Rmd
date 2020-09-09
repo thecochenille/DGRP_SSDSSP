@@ -97,6 +97,7 @@ model2<-lmer(pupa~sex+(1|line)+(1|block), data=df0)  #previously lmer(pupa~sex+(
 model1<-lmer(pupa~sex+(sex|line)+(1|block), data=df0) #previously lmer(pupa~sex+(sex|line)+(1|block), data=df0)
 anova(model1,model2)
 ```
+Model 1 is better, as AIC and BIC is smaller and log likelihood is higher. The difference of fit between these two models is significant.
 
 Do a LRT
 
@@ -142,15 +143,30 @@ summary(model1M.MCMC)
 ### Post model fitting check
 
 #### Residual distribution
+```{r,message=FALSE, warning=FALSE}
+res_model1=residuals(model1)
+```
 Model 1 residual distribution
 
 ```{r,message=FALSE, warning=FALSE}
 plot(model1)
 ```
 
+
+
 Model 1 residual distribution per random factor
 
 
+QQ plot
+```{r,message=FALSE, warning=FALSE}
+qqnorm(res_model1)
+```
+
+
+Random effect plot
+```{r,message=FALSE, warning=FALSE}
+qqmath(ranef(model1))
+```
 #SSP
 
 Does SSP vary among lineages?

@@ -79,6 +79,8 @@ Anova(blocktest, type="III")
 
 There is a difference between collecting blocks so we have to account for block as a random factor, or adjust the values so there is no variation between blocks.
 
+
+
 ## How much bigger are females compared to males?
 
 
@@ -98,11 +100,12 @@ Females are 9.9% larger than males in pupa size.
 
 ## Is there SSD? Using only fed flies (day=0)
 To test if we have sexual size dimorphism, we want to test the effect of size with line and block as random factor. If there is a variation due to sex, that means SSD is present.
+
 ```{r,message=FALSE, warning=FALSE}
 #subsetting day 0, fed flies
 df0<-subset(df, day==0)
 
-SSD<-lmer(pupa~sex+(1|line) +(1|block), data=df0)
+SSD<-lmer(pupa~sex+(1|line) +(1|block), REML=TRUE, data=df0)
 summary(SSD)
 anova(SSD)
 ```
@@ -112,8 +115,9 @@ Now we want to know if that SSD varies between lines.
 
 ```{r,message=FALSE, warning=FALSE}
 
-model2<-lmer(pupa~sex+(1|line)+(1|block), data=df0)  #previously lmer(pupa~sex+(1|line)+(1|block), data=df0)
-model1<-lmer(pupa~sex+(sex|line)+(1|block), data=df0) #previously lmer(pupa~sex+(sex|line)+(1|block), data=df0)
+model2<-lmer(pupa~sex+(1|line)+(1|block), data=df0)  #model to test for SSD presence as we did above
+model1<-lmer(pupa~sex+(sex|line)+(1|block), data=df0) 
+anova(model1)
 anova(model1,model2)
 ```
 Model 1 is better, as AIC and BIC is smaller and log likelihood is higher. The difference of fit between these two models is significant.

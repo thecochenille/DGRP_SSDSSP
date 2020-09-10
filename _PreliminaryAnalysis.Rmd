@@ -45,6 +45,11 @@ df$line<-as.factor(df$line)
 df$day<-as.factor(df$day)
 ```
 
+
+
+
+
+
 #Is there variation among blocks
 Flies of lineages were collected in different blocks, periods of time. Control lineages were selected and collected repeatedly for each block so that if there is variation, we can account for that factor.
 
@@ -73,6 +78,20 @@ Anova(blocktest, type="III")
 ```
 
 There is a difference between collecting blocks so we have to account for block as a random factor, or adjust the values so there is no variation between blocks.
+
+## How much bigger are females compared to males?
+
+
+```{r,message=FALSE, warning=FALSE}
+meanpupa<-tapply(df0$pupa, df0$sex, summary)
+(exp(meanpupa$F[[4]]) -exp(meanpupa$M[[4]]))/exp(meanpupa$M[[4]])*100
+
+```
+
+Females are 9.9% larger than males in pupa size.
+
+
+
 
 
 # SSD
@@ -198,3 +217,23 @@ anova(model1F, model2F)
 
 
 Do we have variation fo plasticity in males?
+
+
+
+
+
+
+#WINGS
+
+### How much bigger are female wings compared to males
+
+```{r,message=FALSE, warning=FALSE}
+df0$sex
+
+wingdf0<-subset(df0, df0$wing >=12)
+meanwing<-tapply(df0$wing, df0$sex, summary)
+
+(exp(meanwing$F[[4]]) -exp(meanwing$M[[4]]))/exp(meanwing$M[[4]])*100
+
+```
+Wings are 21% larger in females than males

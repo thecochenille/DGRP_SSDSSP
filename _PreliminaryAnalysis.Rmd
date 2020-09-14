@@ -35,19 +35,95 @@ R.version
 ```{r,message=FALSE, warning=FALSE}
 #dataset was manually relabeled
 df <- read.csv("~/Dropbox/_Github_reps/DGRP_SSDSSP/Sept2020/DGRPfinal_clean_labels.csv")
+
+#line and day of treatment as categorical
+df$line<-as.factor(df$line)
+df$day<-as.factor(df$day)
+df$block<-as.factor(df$block)
+#summary of data
 summary(df)
 
 #remove all NAs, most functions do not deal with NAs well
 df<-na.omit(df)
 
-#line and day of treatment as categorical
-df$line<-as.factor(df$line)
-df$day<-as.factor(df$day)
+
 ```
 
 
 
+# Filtering out lines with few data
+```{r}
+#subsetting experimental flies only
 
+df_exp<-subset(df, type == "exp")
+df<-df_exp
+
+#filtering out groups (line x sex x day) that have less than 10 flies
+df_f<-subset(df, sex =="F")
+df_f0<-subset(df_f, day =="0")
+df_f1<-subset(df_f, day =="1")
+df_f2<-subset(df_f, day =="2")
+
+#F0
+df_subf0<-df_f0%>%
+group_by(line) %>%
+filter(n() >=10)
+
+length(unique(df_subf0$line)) 
+
+#F1
+df_subf1<-df_f1%>%
+group_by(line) %>%
+filter(n() >=10)
+
+length(unique(df_subf1$line))  
+
+#F2
+df_subf2<-df_f2%>%
+group_by(line) %>%
+filter(n() >=10)
+
+length(unique(df_subf2$line))  
+
+df_m<-subset(df, sex =="M")
+df_m0<-subset(df_m, day =="0")
+df_m1<-subset(df_m, day =="1")
+df_m2<-subset(df_m, day =="2")
+
+#M0
+df_subm0<-df_m0%>%
+group_by(line) %>%
+filter(n() >=10)
+
+length(unique(df_subm0$line)) 
+
+#M1
+df_subm1<-df_m1%>%
+group_by(line) %>%
+filter(n() >=10)
+
+length(unique(df_subm1$line))  
+
+#M2
+df_subm2<-df_m2%>%
+group_by(line) %>%
+filter(n() >=10)
+
+length(unique(df_subm2$line))  
+
+
+
+```
+
+#rebinding dataframes
+
+```{r}
+df0<-rbind(df_subm0, df_subf0)
+df0<-na.omit(df0)
+length(unique(df0$line))  #182 lineages
+length(unique(df0$type))
+
+```
 
 
 #Is there variation among blocks
@@ -78,20 +154,6 @@ Anova(blocktest, type="III")
 ```
 
 There is a difference between collecting blocks so we have to account for block as a random factor, or adjust the values so there is no variation between blocks.
-
-
-
-## How much bigger are females compared to males?
-
-
-```{r,message=FALSE, warning=FALSE}
-meanpupa<-tapply(df0$pupa, df0$sex, summary)
-(exp(meanpupa$F[[4]]) -exp(meanpupa$M[[4]]))/exp(meanpupa$M[[4]])*100
-
-```
-
-Females are 9.9% larger than males in pupa size.
-
 
 
 

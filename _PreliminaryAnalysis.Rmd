@@ -252,42 +252,156 @@ Random effect plot
 ```{r,message=FALSE, warning=FALSE}
 qqmath(ranef(model1))
 ```
+
+
+
 #SSP
 
-Does SSP vary among lineages?
+## Is there a difference in plasticity between males and females = presence of SSP?
+```{r}
+
+# use subset Day 1 and Day 0
+df01<-subset(df, day==0|day==1)
+
+SSP<-lmer(pupa~sex+(sex+day|line)+(1|block), REML=TRUE, data=df01) #random effect, there is variation in sex by line and there is variation in plasticity by line.
+summary(SSP)
+Anova(SSP)
+
+```
+
+##Does SSP vary among lineages?
 
 ```{r,message=FALSE, warning=FALSE}
 # we want to compare effect of sex and day of starvation on pupal size.
-model2<-lmer(pupa~sex*day+(sex+day|line)+(1|block), data=df)
-model1<-lmer(pupa~sex*day+(sex*day|line)+(1|block), data=df)
+model2<-lmer(pupa~sex+(sex+day|line)+(1|block), data=df)
+model1<-lmer(pupa~sex+(sex*day|line)+(1|block), data=df)
 anova(model1,model2)
 ```
 
 
-#Plasticity
+#Plasticity 0 1
+
+Variation in SSP could be the result of variation in only female or male plasticity. We can look at the plasticity in each sex.
+
+```{r,message=FALSE, warning=FALSE}
+#dataset was manually relabeled
+df <- read.csv("~/Dropbox/_Github_reps/DGRP_SSDSSP/Sept2020/DGRPfinal_clean_labels.csv")
+
+#line and day of treatment as categorical
+df$line<-as.factor(df$line)
+df$day<-as.factor(df$day)
+df$block<-as.factor(df$block)
+#summary of data
+summary(df)
+
+#remove all NAs, most functions do not deal with NAs well
+df<-na.omit(df)
+```
+
+
 
 Do we have variation in plasticity in females?
 ```{r,message=FALSE, warning=FALSE}
-dfcF<-subset(df, df$type == "ct" & df$sex =="F")
-
-dfcM<-subset(df, df$type == "ct" & df$sex =="M")
-
+dfcF<-subset(df, df$type == "exp" & df$sex =="F")
+head(dfcF)
 
 model1F<-lmer(pupa~day+(1|line)+(1|block), data=dfcF)
 model2F<-lmer(pupa~day+(day|line)+(1|block), data=dfcF)
 anova(model1F, model2F)
+```
+
+Do we have variation fo plasticity in males?
+
+```{r,message=FALSE, warning=FALSE}
+dfcM<-subset(df, df$type == "exp" & df$sex =="M")
+
+model1M<-lmer(pupa~day+(1|line)+(1|block), data=dfcM)
+model2M<-lmer(pupa~day+(day|line)+(1|block), data=dfcM)
+anova(model1M, model2M)
+```
+
+Can we directly compare variation in plasticity between males and females?
+```{r}
+#calculate plasticity female
+dfcF1<-subset(dfcF, day ==1)
+dfcF1_mean<-aggregate(dfcF1[, 9], list(dfcF1$line), mean)
+colnames(dfcF1_mean)<-c("line","pupaFmean_1")
+head(dfcF1_mean)
+
+dfcF0<-subset(dfcF, day ==0)
+head(dfcF0)
+dfcF0_mean<-aggregate(dfcF0[, 9], list(dfcF0$line), mean)
+colnames(dfcF0_mean)<-c("line","pupaFmean_0")
+head(dfcF0_mean)
+
+pupa_mean_F01<-merge(x=dfcF0_mean, y=dfcF1_mean, by.x="line", by.y="line")
+head(pupa_mean_F01)
+
+pupa_mean_F01$PF01<-pupa_mean_F01$pupaFmean_1-pupa_mean_F01$pupaFmean_0
+head(pupa_mean_F01)
+```
+
+```{r}
+#calculate plasticity male
+dfcM1<-subset(dfcM, day ==1)
+dfcM1_mean<-aggregate(dfcM1[, 9], list(dfcM1$line), mean)
+colnames(dfcM1_mean)<-c("line","pupaMmean_1")
+head(dfcM1_mean)
+
+dfcM0<-subset(dfcM, day ==0)
+head(dfcM0)
+dfcM0_mean<-aggregate(dfcM0[, 9], list(dfcM0$line), mean)
+colnames(dfcM0_mean)<-c("line","pupaMmean_0")
+head(dfcM0_mean)
+
+pupa_mean_M01<-merge(x=dfcM0_mean, y=dfcM1_mean, by.x="line", by.y="line")
+head(pupa_mean_M01)
+
+pupa_mean_M01$PM01<-pupa_mean_M01$pupaMmean_1-pupa_mean_M01$pupaMmean_0
+head(pupa_mean_M01)
+```
 
 
+```{r}
+library(ggplot2)
+library(lattice)
+library(Deducer)
+pupa_SSP<-merge(x= pupa_mean_M01, y= pupa_mean_F01, by.x="line", by.y="line")
+head(pupa_SSP)
+pupa_SSP$SSP01<-pupa_SSP$PF01-pupa_SSP$PM01
+pairs(pupa_SSP)
+pupa_SSP<-na.omit(pupa_SSP)
 
 ```
 
 
-Do we have variation fo plasticity in males?
+```{r}
+panel.cor <- function(x, y, digits=2, prefix="", cex.cor) 
+{
+    usr <- par("usr"); on.exit(par(usr)) 
+    par(usr = c(0, 1, 0, 1)) 
+    r <- abs(cor(x, y)) 
+    txt <- format(c(r, 0.123456789), digits=digits)[1] 
+    txt <- paste(prefix, txt, sep="") 
+    if(missing(cex.cor)) cex <- 0.8/strwidth(txt) 
+ 
+    test <- cor.test(x,y) 
+    # borrowed from printCoefmat
+    Signif <- symnum(test$p.value, corr = FALSE, na = FALSE, 
+                  cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1),
+                  symbols = c("***", "**", "*", ".", " ")) 
+ 
+    text(0.5, 0.5, txt, cex = cex * r) 
+    text(.8, .8, Signif, cex=cex, col=2) 
+}
+
+```
+
+```{r}
+pairs(pupa_SSP[1:8], lower.panel=panel.smooth, upper.panel=panel.cor)
 
 
-
-
-
+```
 
 #WINGS
 
@@ -303,3 +417,43 @@ meanwing<-tapply(df0$wing, df0$sex, summary)
 
 ```
 Wings are 21% larger in females than males
+
+
+
+
+# FECUNDITY and size
+
+```{r}
+fec<-read.csv("Sept2020/Fecundity_mean_Durham.csv", header=TRUE)
+fec_femsize<-merge(x=fec,y=pupa_SSP, by.x = "line",by.y = "line")
+head(fec_femsize)
+
+pairs(fec_femsize[2:10], lower.panel=panel.smooth, upper.panel=panel.cor)
+
+```
+
+I want to see if there is a correlation between female size and fecundity
+
+```{r}
+library(ggplot2)
+g <- ggplot(fec_femsize, aes(lnpupa, ltf))
+g + geom_point() + 
+  geom_smooth(method="lm", se=F) +
+  labs(subtitle=" ", 
+       y="ltf", 
+       x="lnpupa", 
+       title=" ")
+```
+
+
+```{r}
+#week 1 fecundity
+g <- ggplot(fec_femsize, aes(lnpupa, w1f))
+g + geom_point() + 
+  geom_smooth(method="lm", se=F) +
+  labs(subtitle=" ", 
+       y="w1f", 
+       x="lnpupa", 
+       title=" ")
+
+```

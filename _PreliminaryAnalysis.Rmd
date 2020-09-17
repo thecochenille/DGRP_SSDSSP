@@ -23,110 +23,88 @@ require(varhandle)
 require(magrittr)
 require("ggthemes")
 require(pbkrtest)  # parametric bootstrap
-library(car)
+require(car)
+require(tidyverse)
+require(hrbrthemes)
+require(viridis)
+  require(tidyr)
  })
 R.version
 ```
 
+#Questions
+
+To better understand how SSD and SSP impact each other, we will test the following hypotheses:
+
+**Bigger scope: I want to test if the variation in SSD is due variation in female size generated both by the environment, and genetic variation.**
+
+To keep in mind: if SSD is associated with SSP, that means a part of the genetic variation that affects SSD is due to the genetic variation in SSP.
+
+We know that female plasticity is higher than male's and we want to check if the variation in plasticity is due to female variation in plasticity.
+
+That would imply that evolutionarily, female size would tend to be the one changing and generating SSD.
+
+- Section 1: SSD in fed flies
+  - Question 1.1: Is there Sexual Size Dimorphism in the DGRP lines.
+  - Question 1.2: Do we see a genetic variation of SSD in the DGRP lines.
+  - Question 1.3: Is the SSD genetic variation due to a genetic variation in male or in female size?
+
+- Section 2: SSD in other conditions
+  - Question 2.1: Do we have the same SSD when we change environment?
+  - Question 2.2: Does SSD increase or decrease when the flies are starved? Our hypothesis is that overall SSD should decrease
+  - Question 2.3: Does the SSD in starved conditions vary the same way as in fed flies?
+
+If there SSD differs between environmental conditions, that means that the plasticity in female and male is different.
+
+-Section 3: SSP
+  - Question 3.1: Is there SSP when we look at fed vs starved flies?
+  - Question 3.2: Does this SSP vary in the DGRP flies?
+  - Question 3.3: Is the variation in SSP due to a variation in SSD in fed or starved flies?
+If SSP covaries with SSD0, that means that we have variation in fed flies. If SSP covaries with starved flies, we have variation in the reduction of flies size.
+  - Question 3.4: If it is due to SSD in either fed or starved flies, is it because the females vary more or the males vary more in size?
+  - Question 3.5: Does the variation causing SSP (Question 3.4) is the same as the variation caused by SSD in Question 1.3?
 
 
 
-#Preamble
+
+#Data preparation
 ```{r,message=FALSE, warning=FALSE}
-#dataset was manually relabeled
-df <- read.csv("~/Dropbox/_Github_reps/DGRP_SSDSSP/Sept2020/DGRPfinal_clean_labels.csv")
+#dataset was manually relabeled and control lines removed
+df <- read.csv("~/Dropbox/_Github_reps/DGRP_SSDSSP/Data/DGRPfinal_clean_first_ctrl_only.csv")
 
+#column names
+names(df)
+```
+
+
+```{r}
 #line and day of treatment as categorical
 df$line<-as.factor(df$line)
 df$day<-as.factor(df$day)
 df$block<-as.factor(df$block)
 #summary of data
 summary(df)
-
-#remove all NAs, most functions do not deal with NAs well
-df<-na.omit(df)
-
-
 ```
 
 
-
-# Filtering out lines with few data
+## Filtering out lines with few data
 ```{r}
-#subsetting experimental flies only
+#firt, create a column to indicate group by line_sex_day. This will be easier to filter out or subset by group later
 
-df_exp<-subset(df, type == "exp")
-df<-df_exp
+df$group<- paste(df$line, df$sex, df$day, sep = "_")
+head(df)
+```
 
+```{r}
 #filtering out groups (line x sex x day) that have less than 10 flies
-df_f<-subset(df, sex =="F")
-df_f0<-subset(df_f, day =="0")
-df_f1<-subset(df_f, day =="1")
-df_f2<-subset(df_f, day =="2")
 
-#F0
-df_subf0<-df_f0%>%
-group_by(line) %>%
+df_sub<-df%>%
+group_by(group) %>%
 filter(n() >=10)
-
-length(unique(df_subf0$line)) 
-
-#F1
-df_subf1<-df_f1%>%
-group_by(line) %>%
-filter(n() >=10)
-
-length(unique(df_subf1$line))  
-
-#F2
-df_subf2<-df_f2%>%
-group_by(line) %>%
-filter(n() >=10)
-
-length(unique(df_subf2$line))  
-
-df_m<-subset(df, sex =="M")
-df_m0<-subset(df_m, day =="0")
-df_m1<-subset(df_m, day =="1")
-df_m2<-subset(df_m, day =="2")
-
-#M0
-df_subm0<-df_m0%>%
-group_by(line) %>%
-filter(n() >=10)
-
-length(unique(df_subm0$line)) 
-
-#M1
-df_subm1<-df_m1%>%
-group_by(line) %>%
-filter(n() >=10)
-
-length(unique(df_subm1$line))  
-
-#M2
-df_subm2<-df_m2%>%
-group_by(line) %>%
-filter(n() >=10)
-
-length(unique(df_subm2$line))  
-
-
-
-```
-
-#rebinding dataframes
-
-```{r}
-df0<-rbind(df_subm0, df_subf0)
-df0<-na.omit(df0)
-length(unique(df0$line))  #182 lineages
-length(unique(df0$type))
-
 ```
 
 
-#Is there variation among blocks
+##Is there variation among blocks  ==> do it later
 Flies of lineages were collected in different blocks, periods of time. Control lineages were selected and collected repeatedly for each block so that if there is variation, we can account for that factor.
 
 Look at the control lineages to see whether there is variation among blocks
@@ -158,25 +136,61 @@ There is a difference between collecting blocks so we have to account for block 
 
 
 
-# SSD
 
-## Is there SSD? Using only fed flies (day=0)
+
+
+
+# SSD in fed flies
+  - Question 1.1: Is there Sexual Size Dimorphism in the DGRP lines.
+  - Question 1.2: Do we see a genetic variation of SSD in the DGRP lines.
+  - Question 1.3: Is the SSD genetic variation due to a genetic variation in male or in female size?
+
+
+## Question 1.1: Is there Sexual Size Dimorphism in the DGRP flies that are normally fed?
 To test if we have sexual size dimorphism, we want to test the effect of size with line and block as random factor. If there is a variation due to sex, that means SSD is present.
 
 ```{r,message=FALSE, warning=FALSE}
+df<-df_sub  #do not forget to reload data if I want to filter out things differently
+
 #subsetting day 0, fed flies
 df0<-subset(df, day==0)
 
+#na.omit only if pupa has NA
+df0<-na.omit(df0, cols="pupa")
+```
+
+```{r}
+# Testing effect of sex in pupa size, with random effect for line and block.
 SSD<-lmer(pupa~sex+(1|line) +(1|block), REML=TRUE, data=df0)
 summary(SSD)
 anova(SSD)
 ```
 
-## Does SSD vary among lineages?
-Now we want to know if that SSD varies between lines.
 
+```{r}
+# plotting male and female size mean
+df0 %>%
+  ggplot( aes(x=sex, y=pupa, fill=sex)) +
+    geom_boxplot() +
+    scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+    geom_jitter(color="black", size=0.4, alpha=0.2) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)
+    ) +
+    ggtitle("Sexual Size Dimorphism in DGRP flies") +
+    xlab("")
+```
+
+Answer 1.1: Yes, there is sexual size dimorphism in the DGRP flies, and females are larger than males on average.
+
+## Question 1.2: Do we see a genetic variation of SSD in the DGRP lines.
+
+
+### Comparing two models using ANOVA
 ```{r,message=FALSE, warning=FALSE}
-
+#comparing two models
 model2<-lmer(pupa~sex+(1|line)+(1|block), data=df0)  #model to test for SSD presence as we did above
 model1<-lmer(pupa~sex+(sex|line)+(1|block), data=df0) 
 anova(model1)
@@ -184,8 +198,8 @@ anova(model1,model2)
 ```
 Model 1 is better, as AIC and BIC is smaller and log likelihood is higher. The difference of fit between these two models is significant.
 
-Do a LRT
-
+### Do a LRT
+How many parameters for each models
 ```{r,message=FALSE, warning=FALSE}
 (AIC(model1) - REMLcrit(model1))/2 # # of parameters the model "thinks" are being estimated
 (AIC(model2) - REMLcrit(model2))/2 # # of parameters the model "thinks" are being estimated
@@ -201,6 +215,8 @@ nlevels(df$line)
 pchisq(q = LR.model, df=2, lower=F)
 pchisq(q = LR.model, df=nlevels(df$line), lower=F)
 ```
+
+### Parametric boostrap
 Finally, we can conduct a parametric bootstrap to compare the two models.
 
 ```{r echo=FALSE, message = FALSE, warning=FALSE}
@@ -208,7 +224,7 @@ pbtest<-PBmodcomp(model1, model2, nsim=1000, details = 1)
 summary(pbtest)
 ```
 
-Finally using Bayesian Analysis
+### Finally using Bayesian Analysis
 
 ```{r,message=FALSE, warning=FALSE}
 prior.2 <-list(R=list(V=0.01, nu=0.002), 
@@ -225,13 +241,14 @@ summary(model1M.MCMC)
 
 
 
-### Post model fitting check
+### Post model 1 fitting check
 
 #### Residual distribution
 ```{r,message=FALSE, warning=FALSE}
 res_model1=residuals(model1)
 ```
-Model 1 residual distribution
+
+#### Model 1 residual distribution
 
 ```{r,message=FALSE, warning=FALSE}
 plot(model1)
@@ -239,19 +256,78 @@ plot(model1)
 
 
 
-Model 1 residual distribution per random factor
 
-
-QQ plot
+#### QQ plot
 ```{r,message=FALSE, warning=FALSE}
 qqnorm(res_model1)
 ```
 
 
-Random effect plot
+#### Random effect plot
 ```{r,message=FALSE, warning=FALSE}
 qqmath(ranef(model1))
 ```
+We have two plots, one for line and one for block
+
+## Question 1.3: Is the SSD genetic variation due to a genetic variation in male or in female size?
+To test this, I need to look at the correlation between SSD and male size and SSD and female size, the correlation that is higher means that that sex contributes the most to the SSD variation. 
+
+I need to calculate summary for pupa female size, pupa male size and SSD.
+
+```{r}
+#calculate means for each group
+#head(df0)
+df0_mean<-aggregate(df0[, 8], list(df0$group), mean)
+#head(df0_mean)
+
+#re-add line, day and sex columns
+df0_mean<-df0_mean %>%
+  separate(Group.1, c("line", "sex","day"), "_")
+head(df0_mean)
+```
+
+```{r}
+#calculate SSD
+#separating males and females to put the values in columns
+df0_mean_F<-subset(df0_mean, sex=="F")
+df0_mean_M<-subset(df0_mean, sex=="M")
+
+df0_mean_2<-merge(x=df0_mean_F, y=df0_mean_M, by.x="line", by.y="line")
+head(df0_mean_2)
+
+#remove extra columns
+df0_mean_2<-df0_mean_2[,c(1,4,7)] 
+colnames(df0_mean_2) <- c("line", "pupaF", "pupaM")
+
+df0_mean<-df0_mean_2
+df0_mean$SSD0<- df0_mean$pupaF - df0_mean$pupaM  #since we established that females are larger than males in general
+head(df0_mean)
+```
+
+Correlation test
+```{r}
+library(psych)
+
+corr.test(df0_mean[2:4],
+          use    = "pairwise",
+          method = "pearson",
+          adjust = "none")
+```
+
+
+```{r}
+
+library(PerformanceAnalytics)
+
+chart.Correlation(df0_mean[2:4],
+                   method="pearson",
+                   histogram=TRUE,
+                   pch=16)
+```
+It seems that SSD in fed flies co-varies with the most with female size. The R2 is not very high though, so it is not all that explains SSD0 variation.
+
+
+
 
 
 
@@ -344,9 +420,9 @@ pupa_mean_F01<-merge(x=dfcF0_mean, y=dfcF1_mean, by.x="line", by.y="line")
 head(pupa_mean_F01)
 pupa_mean_F012<-merge(x=pupa_mean_F01, y=dfcF2_mean, by.x="line", by.y="line")
 
-pupa_mean_F012$PF01<-pupa_mean_F012$pupaFmean_1-pupa_mean_F012$pupaFmean_0
-pupa_mean_F012$PF02<-pupa_mean_F012$pupaFmean_2-pupa_mean_F012$pupaFmean_0
-pupa_mean_F012$PF12<-pupa_mean_F012$pupaFmean_2-pupa_mean_F012$pupaFmean_1
+pupa_mean_F012$PF01<-pupa_mean_F012$pupaFmean_0-pupa_mean_F012$pupaFmean_1
+pupa_mean_F012$PF02<-pupa_mean_F012$pupaFmean_0-pupa_mean_F012$pupaFmean_2
+pupa_mean_F012$PF12<-pupa_mean_F012$pupaFmean_1-pupa_mean_F012$pupaFmean_2
 
 head(pupa_mean_F012)
 ```
@@ -374,9 +450,11 @@ pupa_mean_M01<-merge(x=dfcM0_mean, y=dfcM1_mean, by.x="line", by.y="line")
 head(pupa_mean_M01)
 pupa_mean_M012<-merge(x=pupa_mean_M01, y=dfcM2_mean, by.x="line", by.y="line")
 
-pupa_mean_M012$PM01<-pupa_mean_M012$pupaMmean_1-pupa_mean_M012$pupaMmean_0
-pupa_mean_M012$PM02<-pupa_mean_M012$pupaMmean_2-pupa_mean_M012$pupaMmean_0
-pupa_mean_M012$PM12<-pupa_mean_M012$pupaMmean_2-pupa_mean_M012$pupaMmean_1
+pupa_mean_M012$PM01<-pupa_mean_M012$pupaMmean_0-pupa_mean_M012$pupaMmean_1
+pupa_mean_M012$PM02<-pupa_mean_M012$pupaMmean_0-pupa_mean_M012$pupaMmean_2
+pupa_mean_M012$PM12<-pupa_mean_M012$pupaMmean_1-pupa_mean_M012$pupaMmean_2
+
+
 
 head(pupa_mean_M012)
 ```
@@ -389,8 +467,20 @@ library(Deducer)
 pupa_SSP<-merge(x= pupa_mean_M012, y= pupa_mean_F012, by.x="line", by.y="line")
 head(pupa_SSP)
 pupa_SSP$SSP01<-pupa_SSP$PF01-pupa_SSP$PM01
-pairs(pupa_SSP)
+pupa_SSP$SSP02<-pupa_SSP$PF02-pupa_SSP$PM02
+pupa_SSP$SSP12<-pupa_SSP$PF12-pupa_SSP$PM12
+#pairs(pupa_SSP)
 pupa_SSP<-na.omit(pupa_SSP)
+
+head(pupa_SSP)
+pupa_summary<-pupa_SSP
+
+
+pupa_summary$SSD0<-pupa_summary$pupaFmean_0-pupa_summary$pupaMmean_0
+pupa_summary$SSD1<-pupa_summary$pupaFmean_1-pupa_summary$pupaMmean_1
+pupa_summary$SSD2<-pupa_summary$pupaFmean_2-pupa_summary$pupaMmean_2
+
+head(pupa_summary)
 
 ```
 
@@ -405,7 +495,7 @@ panel.cor <- function(x, y, digits=2, prefix="", cex.cor)
     txt <- paste(prefix, txt, sep="") 
     if(missing(cex.cor)) cex <- 0.8/strwidth(txt) 
  
-    test <- cor.test(x,y) 
+    test <- cor.test(x,y, method="pearson") 
     # borrowed from printCoefmat
     Signif <- symnum(test$p.value, corr = FALSE, na = FALSE, 
                   cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1),
@@ -416,14 +506,6 @@ panel.cor <- function(x, y, digits=2, prefix="", cex.cor)
 }
 
 ```
-
-```{r}
-pairs(pupa_SSP[1:13], lower.panel=panel.smooth, upper.panel=panel.cor)
-
-
-```
-
-
 
 
 #WINGS
@@ -445,15 +527,63 @@ Wings are 21% larger in females than males
 
 
 # FECUNDITY and size
-
+### Work on this later
 ```{r}
 fec<-read.csv("Sept2020/Fecundity_mean_Durham.csv", header=TRUE)
-fec_femsize<-merge(x=fec,y=pupa_SSP, by.x = "line",by.y = "line")
+fec_femsize<-merge(x=fec,y=pupa_summary, by.x = "line",by.y = "line")
 head(fec_femsize)
 
-pairs(fec_femsize[2:16], lower.panel=panel.smooth, upper.panel=panel.cor)
+#pairs(fec_femsize[3:21], lower.panel=panel.smooth, upper.panel=panel.cor)
+```
+
+#SSP and SSD correlation
+
+```{r}
+#checking the correlations between SSP and SSD
+pairs(fec_femsize[16:21], lower.panel=panel.smooth, upper.panel=panel.cor)
+
+
 
 ```
+
+
+
+The highest covariation is found between SSP02 and SSD2, which means that either female size varies a lot at day2 starvation or male size varies a lot at day 2 starvation. To test that, we plot SSP02 with pupa size for each sex. If there SSP02 is associated with variation of female size at d2, we should see a negative correlation for female size d2 and SSP02. And the other way if male variation is responsible.
+
+
+Another function to check for correlation
+```{r}
+library(psych)
+
+corr.test(fec_femsize[16:21],
+          use    = "pairwise",
+          method = "pearson",
+          adjust = "none")
+```
+
+
+```{r}
+
+library(PerformanceAnalytics)
+
+chart.Correlation(fec_femsize[16:21],
+                   method="pearson",
+                   histogram=TRUE,
+                   pch=16)
+```
+This function shows the variable distribution and which correlation is negative in the Rsquare.
+
+
+```{r}
+head(pupa_summary)
+pupa_SSP02 <- pupa_summary[c(4,10,15)]
+                  
+pairs(pupa_SSP02[1:3], lower.panel=panel.smooth, upper.panel=panel.cor)
+
+```
+
+
+
 
 I want to see if there is a correlation between female size and fecundity
 

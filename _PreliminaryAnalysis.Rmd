@@ -334,11 +334,21 @@ dfcF0_mean<-aggregate(dfcF0[, 9], list(dfcF0$line), mean)
 colnames(dfcF0_mean)<-c("line","pupaFmean_0")
 head(dfcF0_mean)
 
+dfcF2<-subset(dfcF, day ==2)
+head(dfcF2)
+dfcF2_mean<-aggregate(dfcF2[, 9], list(dfcF2$line), mean)
+colnames(dfcF2_mean)<-c("line","pupaFmean_2")
+head(dfcF2_mean)
+
 pupa_mean_F01<-merge(x=dfcF0_mean, y=dfcF1_mean, by.x="line", by.y="line")
 head(pupa_mean_F01)
+pupa_mean_F012<-merge(x=pupa_mean_F01, y=dfcF2_mean, by.x="line", by.y="line")
 
-pupa_mean_F01$PF01<-pupa_mean_F01$pupaFmean_1-pupa_mean_F01$pupaFmean_0
-head(pupa_mean_F01)
+pupa_mean_F012$PF01<-pupa_mean_F012$pupaFmean_1-pupa_mean_F012$pupaFmean_0
+pupa_mean_F012$PF02<-pupa_mean_F012$pupaFmean_2-pupa_mean_F012$pupaFmean_0
+pupa_mean_F012$PF12<-pupa_mean_F012$pupaFmean_2-pupa_mean_F012$pupaFmean_1
+
+head(pupa_mean_F012)
 ```
 
 ```{r}
@@ -354,11 +364,21 @@ dfcM0_mean<-aggregate(dfcM0[, 9], list(dfcM0$line), mean)
 colnames(dfcM0_mean)<-c("line","pupaMmean_0")
 head(dfcM0_mean)
 
+dfcM2<-subset(dfcM, day ==2)
+head(dfcM2)
+dfcM2_mean<-aggregate(dfcM2[, 9], list(dfcM2$line), mean)
+colnames(dfcM2_mean)<-c("line","pupaMmean_2")
+head(dfcM2_mean)
+
 pupa_mean_M01<-merge(x=dfcM0_mean, y=dfcM1_mean, by.x="line", by.y="line")
 head(pupa_mean_M01)
+pupa_mean_M012<-merge(x=pupa_mean_M01, y=dfcM2_mean, by.x="line", by.y="line")
 
-pupa_mean_M01$PM01<-pupa_mean_M01$pupaMmean_1-pupa_mean_M01$pupaMmean_0
-head(pupa_mean_M01)
+pupa_mean_M012$PM01<-pupa_mean_M012$pupaMmean_1-pupa_mean_M012$pupaMmean_0
+pupa_mean_M012$PM02<-pupa_mean_M012$pupaMmean_2-pupa_mean_M012$pupaMmean_0
+pupa_mean_M012$PM12<-pupa_mean_M012$pupaMmean_2-pupa_mean_M012$pupaMmean_1
+
+head(pupa_mean_M012)
 ```
 
 
@@ -366,7 +386,7 @@ head(pupa_mean_M01)
 library(ggplot2)
 library(lattice)
 library(Deducer)
-pupa_SSP<-merge(x= pupa_mean_M01, y= pupa_mean_F01, by.x="line", by.y="line")
+pupa_SSP<-merge(x= pupa_mean_M012, y= pupa_mean_F012, by.x="line", by.y="line")
 head(pupa_SSP)
 pupa_SSP$SSP01<-pupa_SSP$PF01-pupa_SSP$PM01
 pairs(pupa_SSP)
@@ -398,10 +418,13 @@ panel.cor <- function(x, y, digits=2, prefix="", cex.cor)
 ```
 
 ```{r}
-pairs(pupa_SSP[1:8], lower.panel=panel.smooth, upper.panel=panel.cor)
+pairs(pupa_SSP[1:13], lower.panel=panel.smooth, upper.panel=panel.cor)
 
 
 ```
+
+
+
 
 #WINGS
 
@@ -428,7 +451,7 @@ fec<-read.csv("Sept2020/Fecundity_mean_Durham.csv", header=TRUE)
 fec_femsize<-merge(x=fec,y=pupa_SSP, by.x = "line",by.y = "line")
 head(fec_femsize)
 
-pairs(fec_femsize[2:10], lower.panel=panel.smooth, upper.panel=panel.cor)
+pairs(fec_femsize[2:16], lower.panel=panel.smooth, upper.panel=panel.cor)
 
 ```
 

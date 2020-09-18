@@ -395,6 +395,10 @@ SSD1<-lmer(pupa~sex+(1|line) +(1|block), REML=TRUE, data=df1)
 summary(SSD1)
 anova(SSD1)
 ```
+SSD still exists at 1 day starvation
+
+
+
 
 ### 2 day starvation data
 ```{r}
@@ -411,22 +415,446 @@ summary(SSD2)
 anova(SSD2)
 ```
 
+SSD still exists at 2 day starvation
+
+
+How do I see if the SSD between treatment is the same? If it is the same, it will be correlated? But that doesn't mean that if they are correlated, they are from the same female variation. So let's test that
+
+```{r}
+#calculate SSD for each treatment
+
+#SSD1
+# calculate size mean for male and female
+#head(df1)
+df1_mean<-aggregate(df1[, 8], list(df1$group), mean)
+#head(df1_mean)
+
+#re-add line, day and sex columns
+df1_mean<-df1_mean %>%
+  separate(Group.1, c("line", "sex","day"), "_")
+head(df1_mean)
+
+
+```
 
 
 
+```{r}
+#separating males and females to put the values in columns
+df1_mean_F<-subset(df1_mean, sex=="F")
+df1_mean_M<-subset(df1_mean, sex=="M")
+
+df1_mean_2<-merge(x=df1_mean_F, y=df1_mean_M, by.x="line", by.y="line")
+head(df1_mean_2)
+
+#remove extra columns
+df1_mean_2<-df1_mean_2[,c(1,4,7)] 
+colnames(df1_mean_2) <- c("line", "pupaF1", "pupaM1")
+
+df1_mean<-df1_mean_2
+df1_mean$SSD1<- df1_mean$pupaF1 - df1_mean$pupaM1  #since we established that females are larger than males in general
+head(df1_mean)
 
 
+```
 
-
-
-
-
-
-#SSP
-
-## Is there a difference in plasticity between males and females = presence of SSP?
 ```{r}
 
+#SSD 2
+
+# calculate size mean for male and female
+#head(df1)
+df2_mean<-aggregate(df2[, 8], list(df2$group), mean)
+#head(df1_mean)
+
+#re-add line, day and sex columns
+df2_mean<-df2_mean %>%
+  separate(Group.1, c("line", "sex","day"), "_")
+head(df2_mean)
+
+
+#separating males and females to put the values in columns
+df2_mean_F<-subset(df2_mean, sex=="F")
+df2_mean_M<-subset(df2_mean, sex=="M")
+
+df2_mean_2<-merge(x=df2_mean_F, y=df2_mean_M, by.x="line", by.y="line")
+head(df2_mean_2)
+
+#remove extra columns
+df2_mean_2<-df2_mean_2[,c(1,4,7)] 
+colnames(df2_mean_2) <- c("line", "pupaF2", "pupaM2")
+
+df2_mean<-df2_mean_2
+df2_mean$SSD2<- df2_mean$pupaF2 - df2_mean$pupaM2  #since we established that females are larger than males in general
+head(df2_mean)
+
+
+```
+
+```{r}
+#merge all SSDs
+
+SSD01<-merge(x=df0_mean, y=df1_mean,by.x="line", by.y="line" )
+SSDall<-merge(x=SSD01, y=df2_mean,by.x="line", by.y="line" )
+head(SSDall)
+```
+Correlation between SSDs. Hypothesis, if SSD changes with environment, which is what we expect, we will not see a correlation between SSD0 and SSD1 and/or SSD2
+
+```{r}
+#correlation SSD0, SSD1, SSD2
+SSDonly<-SSDall[,c(1,4,7,10)] 
+head(SSDonly)
+
+corr.test(SSDonly[2:4],
+          use    = "pairwise",
+          method = "pearson",
+          adjust = "none")
+
+chart.Correlation(SSDonly[2:4],
+                   method="pearson",
+                   histogram=TRUE,
+                   pch=16)
+```
+There is a small correlation between SSD0 and SSD2. 
+
+Overall, SSD's in different environment do not have a tight correlation between each other. So it seems that SSD changes in different food conditions, does it increase or decrease?
+
+
+##Question 2.2: Does SSD increase or decrease when the flies are starved? Our hypothesis is that overall SSD should decrease
+
+```{r}
+SSDonly2<-SSDonly %>% gather(day, SSD, SSD0:SSD2)
+head(SSDonly2)
+# plotting male and female size mean
+SSDonly2 %>%
+  ggplot( aes(x=day, y=SSD)) +
+    geom_boxplot() +
+    scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+    geom_jitter(color="black", size=0.4, alpha=0.2) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)
+    ) +
+    ggtitle("Sexual Size Dimorphism in DGRP flies") +
+    xlab("")
+
+
+```
+#NOT FINISHED
+```{r}
+#Male and Female size comparison per food
+df_mean<-aggregate(df[, 8], list(df$group), mean)
+#re-add line, day and sex columns
+df_mean<-df_mean %>%
+  separate(Group.1, c("line", "sex","day"), "_")
+head(df_mean)
+
+
+compare_means(pupa~sex , data = df_mean, 
+              group.by = "day", paired = TRUE)
+              
+              # Box plot facetted by "dose"
+p <- ggpaired(df_mean, x = "sex", y = "pupa",
+          color = "day", palette = "jco", 
+          line.color = "gray", line.size = 0.4,
+          facet.by = "day", short.panel.labs = FALSE)
+# Use only p.format as label. Remove method name.
+p + stat_compare_means(label = "p.format", paired = TRUE)
+
+```
+
+
+It looks that overall, average SSD decreases between fed and starved flies. Is this a significant decrease?
+
+I just want to compare the means of SSD.
+
+```{r}
+#ANOVA on SSD per day
+head(SSDonly2)
+SSDtest<-aov(data=SSDonly2, SSD ~day)
+summary(SSDtest)
+plot(SSDtest)
+
+
+model.tables(SSDtest, type="means", se = TRUE)
+
+
+#Pairwise comparison
+TukeyHSD(SSDtest, which = "day")
+```
+
+We see that when starved, SSD decreases significantly but the number of days does not change the SSD.
+
+
+## Question 2.3: Does the SSD in starved conditions vary the same way as in fed flies?
+First, we want to see if there is genetic variation in SSD1 and SSD2
+### SSD1
+```{r}
+#Comparing two model fit for SSD1 to see if there is genetic variation
+
+model2<-lmer(pupa~sex+(1|line)+(1|block), data=df1)  #model to test for SSD presence as we did above
+model1<-lmer(pupa~sex+(sex|line)+(1|block), data=df1) 
+anova(model1)
+anova(model1,model2)
+```
+
+
+Model 1 is better, as AIC and BIC is smaller and log likelihood is higher. The difference of fit between these two models is significant.
+
+### Do a LRT
+How many parameters for each models
+```{r,message=FALSE, warning=FALSE}
+(AIC(model1) - REMLcrit(model1))/2 # # of parameters the model "thinks" are being estimated
+(AIC(model2) - REMLcrit(model2))/2 # # of parameters the model "thinks" are being estimated
+
+```
+
+
+So lme4/lmer is treating model 1 as having two more parameters than model2.
+```{r,message=FALSE, warning=FALSE}
+LR.model <-  -as.numeric(REMLcrit(model1) - REMLcrit(model2))
+LR.model
+nlevels(df1$line)
+pchisq(q = LR.model, df=2, lower=F)
+pchisq(q = LR.model, df=nlevels(df1$line), lower=F)
+```
+
+### Parametric boostrap
+Finally, we can conduct a parametric bootstrap to compare the two models.
+
+```{r echo=FALSE, message = FALSE, warning=FALSE}
+pbtest<-PBmodcomp(model1, model2, nsim=1000, details = 1)
+summary(pbtest)
+```
+
+### Finally using Bayesian Analysis
+
+```{r,message=FALSE, warning=FALSE}
+prior.2 <-list(R=list(V=0.01, nu=0.002), 
+               G=list(G1=list(V=0.01*diag(1), nu=0.002),
+                      G2=list(V=0.01*diag(2), nu=0.002)))
+
+model1M.MCMC <- MCMCglmm(pupa ~ 1 + sex, 
+  random=~block + us(1 + sex):line,
+  prior = prior.2, burnin = 5000, nitt = 20000, thin = 10,
+  verbose = F, pr = T,
+  data=df0)
+summary(model1M.MCMC)
+```
+
+
+
+### Post model 1 fitting check
+
+#### Residual distribution
+```{r,message=FALSE, warning=FALSE}
+res_model1=residuals(model1)
+```
+
+#### Model 1 residual distribution
+
+```{r,message=FALSE, warning=FALSE}
+plot(model1)
+```
+
+
+
+
+#### QQ plot
+```{r,message=FALSE, warning=FALSE}
+require(ggpubr)
+ggqqplot(res_model1)
+```
+
+
+#### Random effect plot
+```{r,message=FALSE, warning=FALSE}
+qqmath(ranef(model1))
+```
+We have two plots, one for line and one for block
+
+
+
+
+### SSD2
+```{r}
+#Comparing two model fit for SSD2 to see if there is genetic variation
+
+model2<-lmer(pupa~sex+(1|line)+(1|block), data=df2)  #model to test for SSD presence as we did above
+model1<-lmer(pupa~sex+(sex|line)+(1|block), data=df2) 
+anova(model1)
+anova(model1,model2)
+```
+
+
+Model 1 is better, as AIC and BIC is smaller and log likelihood is higher. The difference of fit between these two models is significant.
+
+### Do a LRT
+How many parameters for each models
+```{r,message=FALSE, warning=FALSE}
+(AIC(model1) - REMLcrit(model1))/2 # # of parameters the model "thinks" are being estimated
+(AIC(model2) - REMLcrit(model2))/2 # # of parameters the model "thinks" are being estimated
+
+```
+
+
+So lme4/lmer is treating model 1 as having two more parameters than model2.
+```{r,message=FALSE, warning=FALSE}
+LR.model <-  -as.numeric(REMLcrit(model1) - REMLcrit(model2))
+LR.model
+nlevels(df1$line)
+pchisq(q = LR.model, df=2, lower=F)
+pchisq(q = LR.model, df=nlevels(df1$line), lower=F)
+```
+
+### Parametric boostrap
+Finally, we can conduct a parametric bootstrap to compare the two models.
+
+```{r echo=FALSE, message = FALSE, warning=FALSE}
+pbtest<-PBmodcomp(model1, model2, nsim=1000, details = 1)
+summary(pbtest)
+```
+
+### Finally using Bayesian Analysis
+
+```{r,message=FALSE, warning=FALSE}
+prior.2 <-list(R=list(V=0.01, nu=0.002), 
+               G=list(G1=list(V=0.01*diag(1), nu=0.002),
+                      G2=list(V=0.01*diag(2), nu=0.002)))
+
+model1M.MCMC <- MCMCglmm(pupa ~ 1 + sex, 
+  random=~block + us(1 + sex):line,
+  prior = prior.2, burnin = 5000, nitt = 20000, thin = 10,
+  verbose = F, pr = T,
+  data=df0)
+summary(model1M.MCMC)
+```
+
+
+
+### Post model 1 fitting check
+
+#### Residual distribution
+```{r,message=FALSE, warning=FALSE}
+res_model1=residuals(model1)
+```
+
+#### Model 1 residual distribution
+
+```{r,message=FALSE, warning=FALSE}
+plot(model1)
+```
+
+
+
+
+#### QQ plot
+```{r,message=FALSE, warning=FALSE}
+require(ggpubr)
+ggqqplot(res_model1)
+```
+
+
+#### Random effect plot
+```{r,message=FALSE, warning=FALSE}
+qqmath(ranef(model1))
+```
+We have two plots, one for line and one for block
+
+
+SSD1 and SSD2 vary also significantly.
+
+Does that variation correlate with SSD0?
+
+If they vary the same way, we should see a correlation. It was tested earlier that no. We can visualize how SSD changes across lineages too.
+
+```{r}
+library(tidyverse)
+
+ggplot(SSDonly2, aes(x=reorder(line,SSD), y=SSD)) +
+  geom_col(aes(fill = day)) +
+  facet_wrap(~ day) +
+  coord_flip()
+
+
+
+```
+
+
+Since there is just a weak correlation between SSD0 and SSD2, I want to know if SSD1 and SSD2 varies because of female size variation as found in SSD0.
+
+Correlation test between SSD1 and female and male size
+
+```{r}
+SSD1_size<-SSDall[,c(1,5:7)]
+
+library(psych)
+
+corr.test(SSD1_size[2:4],
+          use    = "pairwise",
+          method = "pearson",
+          adjust = "none")
+```
+
+
+```{r}
+
+library(PerformanceAnalytics)
+
+chart.Correlation(SSD1_size[2:4],
+                   method="pearson",
+                   histogram=TRUE,
+                   pch=16)
+```
+
+
+
+Correlation SSD2 and female and male size
+```{r}
+SSD2_size<-SSDall[,c(1,8:10)]
+
+library(psych)
+
+corr.test(SSD2_size[2:4],
+          use    = "pairwise",
+          method = "pearson",
+          adjust = "none")
+```
+
+
+```{r}
+
+library(PerformanceAnalytics)
+
+chart.Correlation(SSD2_size[2:4],
+                   method="pearson",
+                   histogram=TRUE,
+                   pch=16)
+```
+
+In all cases, female size seems to covary at least partly with the SSD in different conditions.
+
+
+FIND HOW WE CAN COMPARE CORRELATIONS OF SSD vs female, SSD1 vs female 1, and SSD2 vs female2
+
+We have shown that SSD in different condition changes, and that the variation of SSD partly covariates with female size variation. But the degree of correlation varies.
+
+But if SSD changes under different conditions, that means that female and males must have a different response to environemental change, so sex specific plasticity or SSP must differ.
+
+#Section 3: SSP01 and SSP02
+  - Question 3.1: Is there SSP when we look at fed vs starved flies?
+  - Question 3.2: Does this SSP vary in the DGRP flies?
+  - Question 3.3: Is the variation in SSP due to a variation in SSD in fed or starved flies?
+If SSP covaries with SSD0, that means that we have variation in fed flies. If SSP covaries with starved flies, we have variation in the reduction of flies size.
+  - Question 3.4: If it is due to SSD in either fed or starved flies, is it because the females vary more or the males vary more in size?
+  - Question 3.5: Does the variation causing SSP (Question 3.4) is the same as the variation caused by SSD in Question 1.3?
+
+
+##Question 3.1: Is there SSP when we look at fed vs starved flies?
+
+### SSP01: between fed and 1 day starved flies
+```{r}
 # use subset Day 1 and Day 0
 df01<-subset(df, day==0|day==1)
 
@@ -436,14 +864,75 @@ Anova(SSP)
 
 ```
 
-##Does SSP vary among lineages?
+### SSP02: between fed and 1 day starved flies
+```{r}
+# use subset Day 1 and Day 0
+df02<-subset(df, day==0|day==2)
 
+SSP<-lmer(pupa~sex+(sex+day|line)+(1|block), REML=TRUE, data=df02) #random effect, there is variation in sex by line and there is variation in plasticity by line.
+summary(SSP)
+Anova(SSP)
+
+```
+
+
+
+
+##Question 3.2: Does this SSP vary in the DGRP flies?
+### SSP01
 ```{r,message=FALSE, warning=FALSE}
 # we want to compare effect of sex and day of starvation on pupal size.
-model2<-lmer(pupa~sex+(sex+day|line)+(1|block), data=df)
-model1<-lmer(pupa~sex+(sex*day|line)+(1|block), data=df)
+model2<-lmer(pupa~sex+(sex+day|line)+(1|block), data=df01)
+model1<-lmer(pupa~sex+(sex*day|line)+(1|block), data=df01)
 anova(model1,model2)
 ```
+
+
+In that case model 1 is better.
+
+
+### SSP02
+```{r,message=FALSE, warning=FALSE}
+# we want to compare effect of sex and day of starvation on pupal size.
+model2<-lmer(pupa~sex+(sex+day|line)+(1|block), data=df02)
+model1<-lmer(pupa~sex+(sex*day|line)+(1|block), data=df02)
+anova(model1,model2)
+```
+
+Model 1 is better here.
+
+##Question 3.3: Is the variation in SSP due to a variation in SSD in fed or starved flies?
+Look at the correlation between SSP01, SSD0 and SSD1
+
+
+
+
+Look at the correlation between SSP02, SSD0 and SSD2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #Plasticity 0 1

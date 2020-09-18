@@ -97,7 +97,7 @@ head(df)
 
 ```{r}
 #filtering out groups (line x sex x day) that have less than 10 flies
-
+#NB: check if I run that filter after na omit before each analysis might not be better?
 df_sub<-df%>%
 group_by(group) %>%
 filter(n() >=10)
@@ -259,7 +259,8 @@ plot(model1)
 
 #### QQ plot
 ```{r,message=FALSE, warning=FALSE}
-qqnorm(res_model1)
+require(ggpubr)
+ggqqplot(res_model1)
 ```
 
 
@@ -285,6 +286,20 @@ df0_mean<-df0_mean %>%
   separate(Group.1, c("line", "sex","day"), "_")
 head(df0_mean)
 ```
+
+
+Size Mean by line plot boxplot for fed flies
+
+```{r}
+df0_mean %>%
+  ggplot(aes(sex,pupa, fill=sex)) +
+  geom_boxplot() +
+  geom_point(size=0.5)+ 
+  geom_line(aes(group=line, alpha=0.1, linewidth=0.5)) +
+  theme(legend.position = "none")
+
+```
+
 
 ```{r}
 #calculate SSD
@@ -315,6 +330,8 @@ corr.test(df0_mean[2:4],
 ```
 
 
+
+
 ```{r}
 
 library(PerformanceAnalytics)
@@ -325,6 +342,80 @@ chart.Correlation(df0_mean[2:4],
                    pch=16)
 ```
 It seems that SSD in fed flies co-varies with the most with female size. The R2 is not very high though, so it is not all that explains SSD0 variation.
+
+
+
+Does female size vary more genetically than male size?
+
+One tail variance F test
+
+
+```{r}
+#Before performing the F test, I need to check that both samples are normally distributed.
+require(ggpubr)
+ggqqplot(df0_mean$pupaF)
+ggqqplot(df0_mean$pupaM)
+
+
+shapiro.test(df0_mean$pupaM) #normal distribution
+shapiro.test(df0_mean$pupaF) #normal distribution
+
+
+#one tail F test
+
+var.test(df0_mean$pupaF, df0_mean$pupaM, alternative = "greater")
+```
+
+
+
+The variance in female size is actually not bigger than that of male size, despite the higher correlation between female size and SSD0, than male size and SS0. So does it mean that SSD0 varies partly because of a co-variation with female size but not from the fact that female size varies more genetically? So where does that SSD variation come from?
+
+
+# Section 2: SSD in other conditions
+We found that in fed flies, females are on average larger than males, so there is a female biased SSD. That SSD also vary genetically. We finally found out that SSD variation is in part driven by the genetic variation of female size, although the variance of female size is the same as male size.
+
+Let's look at different starving conditions
+
+  - Question 2.1: Do we have the same SSD when we change environment?
+  - Question 2.2: Does SSD increase or decrease when the flies are starved? Our hypothesis is that overall SSD should decrease
+  - Question 2.3: Does the SSD in starved conditions vary the same way as in fed flies?
+  
+## Question 2.1: Do we have the same SSD when we change environment?
+### 1 day starvation data
+```{r}
+#subset day 1 and day 2 starvation
+df1<-subset(df_sub, day==1) #7755 rows
+#na.omit only if pupa has NA
+df1<-na.omit(df1, cols="pupa") #6409 rows
+```
+
+```{r}
+# Testing effect of sex in pupa size, with random effect for line and block.
+SSD1<-lmer(pupa~sex+(1|line) +(1|block), REML=TRUE, data=df1)
+summary(SSD1)
+anova(SSD1)
+```
+
+### 2 day starvation data
+```{r}
+#subsetting day 2 starvation 
+df2<-subset(df_sub, day==2) #3111 rows
+#na.omit only if pupa has NA
+df2<-na.omit(df2, cols="pupa") #2573 rows
+```
+
+```{r}
+# Testing effect of sex in pupa size, with random effect for line and block.
+SSD2<-lmer(pupa~sex+(1|line) +(1|block), REML=TRUE, data=df2)
+summary(SSD2)
+anova(SSD2)
+```
+
+
+
+
+
+
 
 
 

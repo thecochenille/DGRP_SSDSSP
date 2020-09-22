@@ -286,6 +286,7 @@ df0_mean<-df0_mean %>%
   separate(Group.1, c("line", "sex","day"), "_")
 head(df0_mean)
 df0_mean$pupa<-df0_mean$pupa_noblock
+df0_mean
 ```
 
 
@@ -293,8 +294,9 @@ Size Mean by line plot boxplot for fed flies
 
 ```{r}
 # this plot is based on the variation excluding block effect
+head(df0_mean)
 df0_mean %>%
-  ggplot(aes(sex,pupa, fill=sex)) +
+  ggplot(aes(sex,pupa_noblock, fill=sex)) +
   geom_boxplot() +
   geom_point(size=0.5)+ 
   geom_line(aes(group=line, alpha=0.1, linewidth=0.5)) +
@@ -303,8 +305,9 @@ df0_mean %>%
 ```
 
 
+
 ```{r}
-#calculate SSD
+#calculate SSD0
 #separating males and females to put the values in columns
 df0_mean_F<-subset(df0_mean, sex=="F")
 df0_mean_M<-subset(df0_mean, sex=="M")
@@ -313,12 +316,12 @@ df0_mean_2<-merge(x=df0_mean_F, y=df0_mean_M, by.x="line", by.y="line")
 head(df0_mean_2)
 
 #remove extra columns
-df0_mean_2<-df0_mean_2[,c(1,4,8)] 
-colnames(df0_mean_2) <- c("line", "pupaF", "pupaM")
+df0_mean_2<-df0_mean_2[,c(1,4,8)] #line, pupa_noblockF and pupa_noblockM
+colnames(df0_mean_2) <- c("line", "pupaF", "pupaM") #rename col
 
-df0_mean<-df0_mean_2
-df0_mean$SSD0<- df0_mean$pupaF - df0_mean$pupaM  #since we established that females are larger than males in general
-head(df0_mean)
+df0_mean<-df0_mean_2 #move back to df0_mean
+df0_mean$SSD0<- df0_mean$pupaF - df0_mean$pupaM  #since we established that females are larger than males in general, SSD is female-male sizes
+head(df0_mean) #182 lines
 ```
 
 Correlation test
@@ -328,8 +331,6 @@ corr.test(df0_mean[2:4],
           method = "pearson",
           adjust = "none")
 ```
-
-
 
 
 ```{r}
@@ -379,9 +380,11 @@ Let's look at different starving conditions
 ### 1 day starvation data
 ```{r}
 #subset day 1 and day 2 starvation
-df1<-subset(df_sub, day=="D1") #df_sub N<10 per group filtered out already
-#na.omit only if pupa has NA
 
+#fisrt subset Day1 data from df_sub
+df1<-subset(df_sub, day=="D1") #df_sub N<10 per group filtered out already
+
+#na.omit only if pupa has NA
 df1<-na.omit(df1, cols="pupa") #6409 rows
 length(unique(df1$line)) #179 lines left
 ```
@@ -422,13 +425,14 @@ How do I see if the SSDs between treatment are the same? If they are the same, d
 #SSD1
 # calculate size mean for male and female
 head(df1)
-df1_mean<-aggregate(df1[, 10], list(df1$group), mean)
+df1_mean<-aggregate(df1[, 10], list(df1$group), mean) #calculate mean of pupa_noblock to remove the block effect
 head(df1_mean)
 
 #re-add line, day and sex columns
 df1_mean<-df1_mean %>%
   separate(Group.1, c("line", "sex","day"), "_")
 head(df1_mean)
+length(unique(df1_mean$line)) #179 lines
 ```
 
 ```{r}
@@ -440,12 +444,13 @@ df1_mean_2<-merge(x=df1_mean_F, y=df1_mean_M, by.x="line", by.y="line")
 head(df1_mean_2)
 
 #remove extra columns
-df1_mean_2<-df1_mean_2[,c(1,4,7)] 
+df1_mean_2<-df1_mean_2[,c(1,4,7)] #using pupa_noblock
 colnames(df1_mean_2) <- c("line", "pupaF1", "pupaM1")
 
 df1_mean<-df1_mean_2
 df1_mean$SSD1<- df1_mean$pupaF1 - df1_mean$pupaM1  #since we established that females are larger than males in general
-head(df1_mean) #157 lines left after calculating SSD1
+head(df1_mean) 
+length(unique(df1_mean$line)) #157 lines left after calculating SSD1
 ```
 
 ```{r}
@@ -473,8 +478,8 @@ colnames(df2_mean_2) <- c("line", "pupaF2", "pupaM2")
 
 df2_mean<-df2_mean_2
 df2_mean$SSD2<- df2_mean$pupaF2 - df2_mean$pupaM2  #since we established that females are larger than males in general
-head(df2_mean) #59 lines left after I calculate SSD2
-
+head(df2_mean) 
+length(unique(df2_mean$line)) #59 lines left after I calculate SSD2
 
 ```
 
@@ -484,7 +489,7 @@ head(df2_mean) #59 lines left after I calculate SSD2
 To make the boxplot, I initially merges SSDs dataframe but it discards all lines that do not have SSD2, so this time I will rbind the dataframes
 
 ```{r}
-#combining SSDs values without discarding rows
+#combining SSDs values without discarding rows, which would happen if I merged the dataframes (we would end up with 59 lines for all SSD2)
 SSD0<-df0_mean[,c(1,4)]
 SSD0$day<-"D0"
 names(SSD0)[names(SSD0) == "SSD0"] <- "SSD"
@@ -513,7 +518,7 @@ SSD_all %>%
       legend.position="none",
       plot.title = element_text(size=11)
     ) +
-    ggtitle("Sexual Size Dimorphism in DGRP flies") +
+    ggtitle("Sexual Size Dimorphism in DGRP flies at different starving conditions") +
     xlab("")
 
 
@@ -719,7 +724,7 @@ SSD1 and SSD2 vary also significantly.
 
 Does that variation correlate with SSD0?
 
-If they vary the same way, we should see a correlation. It was tested earlier that no. We can visualize how SSD changes across lineages too.
+If SSD0 covaries with SSD1/SSD2, that means we should not see a difference in plasticity. We first can visualize how SSD changes across lineages.
 
 ```{r}
 library(tidyverse)
@@ -738,30 +743,30 @@ Correlation between SSDs. Hypothesis, if SSD changes with environment, which is 
 #correlation SSD0, SSD1, SSD2
 SSD_all_col<-spread(SSD_all,day ,SSD)
 
-head(SSDonly)
+head(SSD_all_col) #D0 is SSD0, D1 is SSD1 and D2 is SSD2
 
-corr.test(SSDonly[2:4],
+corr.test(SSD_all_col[2:4],
           use    = "pairwise",
           method = "pearson",
           adjust = "none")
 
-chart.Correlation(SSDonly[2:4],
+chart.Correlation(SSD_all_col[2:4],
                    method="pearson",
                    histogram=TRUE,
                    pch=16)
 ```
-There is a small correlation between SSD0 and SSD2. 
+There is a weak correlation between SSD0 and SSD2, still higher than SSD1 and SSD0 
 
-Since there is just a weak correlation between SSD0 and SSD2, I want to know if SSD1 and SSD2 varies because of female size variation as found in SSD0.
+Since there is just a weak correlation between SSD0 and SSD2, I want to know if SSD1 and SSD2 varies because of female size variation as it was found in SSD0.
 
 
 Correlation SSD2 and female and male size
 ```{r}
-SSD2_size<-SSDall[,c(1,8:10)]
+#SSD2 and female and male size dataset
+df2_mean
 
-library(psych)
 
-corr.test(SSD2_size[2:4],
+corr.test(df2_mean[2:4],
           use    = "pairwise",
           method = "pearson",
           adjust = "none")
@@ -770,16 +775,39 @@ corr.test(SSD2_size[2:4],
 
 ```{r}
 #correlation plot
-chart.Correlation(SSD2_size[2:4],
+chart.Correlation(df2_mean[2:4],
                    method="pearson",
                    histogram=TRUE,
                    pch=16)
 ```
 
-In all cases, female size seems to covary at least partly with the SSD in different conditions.
+SSD2 covaries with female size in 2 days starvation.
 
 
-DOES IT MAKE SENSE TO COMPARE CORRELATIONS (is there a statistical test), I want to know if female Day0 variation controls more SSD0 than Day1 female size variation does for SSD2
+Will still check SSD1, even though it does not correlate with SSD0, we can see if SSD1 variation covaries with either female or male variation
+
+```{r}
+#SSD2 and female and male size dataset
+df1_mean
+
+
+corr.test(df1_mean[2:4],
+          use    = "pairwise",
+          method = "pearson",
+          adjust = "none")
+#correlation plot
+chart.Correlation(df1_mean[2:4],
+                   method="pearson",
+                   histogram=TRUE,
+                   pch=16)
+```
+SSD1 has the highest correlation with female size variation
+
+
+
+
+
+DOES IT MAKE SENSE TO COMPARE CORRELATIONS (is there a statistical test), I want to know if female Day0 variation controls more SSD0 than Day2 female size variation does for SSD2
 
 ```{r}
 
@@ -787,7 +815,7 @@ DOES IT MAKE SENSE TO COMPARE CORRELATIONS (is there a statistical test), I want
 ```
 
 
-We have shown that SSD in different condition changes, that in starved conditions, we have a decrease in overall SSD, and that the variation of SSD partly covariates with female size. But the degree of correlation varies? (how to test that?)
+We have shown that SSD in different condition changes, that in starved conditions, we have a decrease in overall SSD, and that the variation of SSD partly covariates with female size for SSD0 and SSD2. But the degree of correlation varies? (how to test that?)
 
 But if SSD changes under different conditions, that means that females and males must have a different response to environmental changes, so we should see a sex specific plasticity or SSP.
 
@@ -805,8 +833,8 @@ If SSP covaries with SSD0, that means that we have variation in fed flies. If SS
 ### SSP01: between fed and 1 day starved flies
 ```{r}
 # use subset Day 1 and Day 0
-df01<-subset(df, day==0|day==1)
-df01<-na.omit(df01, cols="pupa")
+df01<-subset(df_sub, day=="D0"|day=="D1")
+df01<-na.omit(df01, cols="pupa") #1447  rows
 
 SSP01_test<-lmer(pupa~sex*day+(1|line)+(1|block), REML=TRUE, data=df01) #random effect, there is variation in sex by line and there is variation in plasticity by line.
 summary(SSP01_test)
@@ -817,8 +845,8 @@ Anova(SSP01_test)
 ### SSP02: between fed and 1 day starved flies
 ```{r}
 # use subset Day 1 and Day 0
-df02<-subset(df, day==0|day==2)
-df02<-na.omit(df02, cols="pupa")
+df02<-subset(df, day=="D0"|day=="D2")
+df02<-na.omit(df02, cols="pupa") #10738 rows
 SSP02_test<-lmer(pupa~sex*day+(1|line)+(1|block), REML=TRUE, data=df02) #random effect, there is variation in sex by line and there is variation in plasticity by line.
 summary(SSP02_test)
 Anova(SSP02_test)
@@ -1006,87 +1034,106 @@ To calculate SSP, I first calculate the plasticity of female and male and subtra
 #calculate plasticity female
 head(df1)
 df1F<-subset(df1, sex=="F")
-df1F_mean<-aggregate(df1F[, 8], list(df1F$line), mean)
+head(df1F)
+df1F_mean<-aggregate(df1F[, 10], list(df1F$line), mean)
 colnames(df1F_mean)<-c("line","pupaFmean_1")
 head(df1F_mean)
+```
 
-
+```{r}
 df0F<-subset(df0, sex=="F")
-df0F_mean<-aggregate(df0F[, 8], list(df0F$line), mean)
+df0F_mean<-aggregate(df0F[, 10], list(df0F$line), mean)
 colnames(df0F_mean)<-c("line","pupaFmean_0")
 head(df0F_mean)
 
+```
+
+
+```{r}
 df2F<-subset(df2, sex=="F")
-df2F_mean<-aggregate(df2F[, 8], list(df2F$line), mean)
+df2F_mean<-aggregate(df2F[, 10], list(df2F$line), mean)
 colnames(df2F_mean)<-c("line","pupaFmean_2")
 head(df2F_mean)
+```
 
-pupa_mean_F01<-merge(x=df0F_mean, y=df1F_mean, by.x="line", by.y="line")
-head(pupa_mean_F01)
-pupa_mean_F012<-merge(x=pupa_mean_F01, y=df2F_mean, by.x="line", by.y="line")
+```{r}
+pupa_mean_F01<-merge(x=df0F_mean, y=df1F_mean, by.x="line", by.y="line") #cannot merge all three treatment together or we loose data because less data at Day 2
+head(pupa_mean_F01) #151
 
-pupa_mean_F012$PF01<-pupa_mean_F012$pupaFmean_0-pupa_mean_F012$pupaFmean_1
-pupa_mean_F012$PF02<-pupa_mean_F012$pupaFmean_0-pupa_mean_F012$pupaFmean_2
-pupa_mean_F012$PF12<-pupa_mean_F012$pupaFmean_1-pupa_mean_F012$pupaFmean_2
+#for SSP02
+pupa_mean_F02<-merge(x=df0F_mean, y=df2F_mean, by.x="line", by.y="line")
+head(pupa_mean_F02) #66 lines
 
-head(pupa_mean_F012)
-pupa_plasticityF<-pupa_mean_F012 #this dataframe has female size in three days and plasticity
+
+pupa_mean_F01$PF01<-pupa_mean_F01$pupaFmean_0-pupa_mean_F01$pupaFmean_1 #calculating plast female 01
+pupa_mean_F02$PF02<-pupa_mean_F02$pupaFmean_0-pupa_mean_F02$pupaFmean_2 #calculating plast female 02
+
+plastF01<-pupa_mean_F01 
+plastF02<-pupa_mean_F02
+
 ```
 
 ```{r}
 #calculate plasticity male
 head(df1)
-df1F<-subset(df1, sex=="M")
-df1F_mean<-aggregate(df1F[, 8], list(df1F$line), mean)
-colnames(df1F_mean)<-c("line","pupaMmean_1")
-head(df1F_mean)
+df1M<-subset(df1, sex=="M")
+df1M_mean<-aggregate(df1M[, 10], list(df1M$line), mean)
+colnames(df1M_mean)<-c("line","pupaMmean_1")
+head(df1M_mean)
 
 
-df0F<-subset(df0, sex=="M")
-df0F_mean<-aggregate(df0F[, 8], list(df0F$line), mean)
-colnames(df0F_mean)<-c("line","pupaMmean_0")
-head(df0F_mean)
+df0M<-subset(df0, sex=="M")
+df0M_mean<-aggregate(df0M[, 10], list(df0M$line), mean)
+colnames(df0M_mean)<-c("line","pupaMmean_0")
+head(df0M_mean)
 
-df2F<-subset(df2, sex=="M")
-df2F_mean<-aggregate(df2F[, 8], list(df2F$line), mean)
-colnames(df2F_mean)<-c("line","pupaMmean_2")
-head(df2F_mean)
+df2M<-subset(df2, sex=="M")
+df2M_mean<-aggregate(df2M[, 10], list(df2M$line), mean)
+colnames(df2M_mean)<-c("line","pupaMmean_2")
+head(df2M_mean)
 
-pupa_mean_F01<-merge(x=df0F_mean, y=df1F_mean, by.x="line", by.y="line")
-head(pupa_mean_F01)
-pupa_mean_F012<-merge(x=pupa_mean_F01, y=df2F_mean, by.x="line", by.y="line")
 
-pupa_mean_F012$PM01<-pupa_mean_F012$pupaMmean_0-pupa_mean_F012$pupaMmean_1
-pupa_mean_F012$PM02<-pupa_mean_F012$pupaMmean_0-pupa_mean_F012$pupaMmean_2
-pupa_mean_F012$PM12<-pupa_mean_F012$pupaMmean_1-pupa_mean_F012$pupaMmean_2
+pupa_mean_M01<-merge(x=df0M_mean, y=df1M_mean, by.x="line", by.y="line") #cannot merge all three treatment together or we loose data because less data at Day 2
+head(pupa_mean_F01) #151
 
-head(pupa_mean_F012)
-pupa_plasticityM<-pupa_mean_F012
-head(pupa_plasticityM) #this dataframe has MALE size in three days and plasticity
 
+pupa_mean_M02<-merge(x=df0M_mean, y=df2M_mean, by.x="line", by.y="line")
+head(pupa_mean_M02) #66 lines
+
+
+pupa_mean_M01$PM01<-pupa_mean_M01$pupaMmean_0-pupa_mean_M01$pupaMmean_1 #calculating SSP01
+pupa_mean_M02$PM02<-pupa_mean_M02$pupaMmean_0-pupa_mean_M02$pupaMmean_2 #calculating SSP02
+
+plastM01<-pupa_mean_M01 
+plastM02<-pupa_mean_M02
 ```
 
 
 ```{r}
+#SSP01
 
-pupa_SSP<-merge(x=pupa_plasticityF, y= pupa_plasticityM, by.x="line", by.y="line") #merging male and female datasets
-head(pupa_SSP)
+pupa_SSP01<-merge(x=plastF01, y= plastM01, by.x="line", by.y="line") #merging male and female datasets
+head(pupa_SSP01)
+length(unique(pupa_SSP01$line)) #146 lines left
+
+#SSP02
+pupa_SSP02<-merge(x=plastF02, y= plastM02, by.x="line", by.y="line") #merging male and female datasets
+head(pupa_SSP02)
+length(unique(pupa_SSP02$line)) #55 lines left
 
 #calculate SSP from the plasticity.
-pupa_SSP$SSP01<-pupa_SSP$PF01-pupa_SSP$PM01
-pupa_SSP$SSP02<-pupa_SSP$PF02-pupa_SSP$PM02
-pupa_SSP$SSP12<-pupa_SSP$PF12-pupa_SSP$PM12
+pupa_SSP01$SSP01<-pupa_SSP01$PF01-pupa_SSP01$PM01
 
-#removing missing data
-#pupa_SSP<-na.omit(pupa_SSP)
+pupa_SSP02$SSP02<-pupa_SSP02$PF02-pupa_SSP02$PM02
 
-head(pupa_SSP)
-pupa_summary<-pupa_SSP
 
 #calculating SSDs again to add them to the dataframe
-pupa_summary$SSD0<-pupa_summary$pupaFmean_0-pupa_summary$pupaMmean_0
-pupa_summary$SSD1<-pupa_summary$pupaFmean_1-pupa_summary$pupaMmean_1
-pupa_summary$SSD2<-pupa_summary$pupaFmean_2-pupa_summary$pupaMmean_2
+pupa_SSP01$SSD0<-pupa_SSP01$pupaFmean_0-pupa_SSP01$pupaMmean_0
+pupa_SSP01$SSD1<-pupa_SSP01$pupaFmean_1-pupa_SSP01$pupaMmean_1
+
+
+pupa_SSP02$SSD0<-pupa_SSP02$pupaFmean_0-pupa_SSP02$pupaMmean_0
+pupa_SSP02$SSD2<-pupa_SSP02$pupaFmean_2-pupa_SSP02$pupaMmean_2
 
 
 ```
@@ -1096,7 +1143,9 @@ pupa_summary$SSD2<-pupa_summary$pupaFmean_2-pupa_summary$pupaMmean_2
 ##### SSP01, SSD0 and SSD1
 Is SSD0 or 1 covarying with SSP01?
 ```{r}
-SSP01<-pupa_summary[c(1,14,17,18)]
+#use pupa_SSP01 
+head(pupa_SSP01)
+SSP01<-pupa_SSP01[c(1,8:10)]
 chart.Correlation(SSP01[2:4],
                    method="pearson",
                    histogram=TRUE,
@@ -1107,10 +1156,10 @@ The highest correlation is between SSD1 and SSP01, and it is a negative correlat
 #### Correlation SSP01, female Day 1 and male Day 1 size
 
 ```{r}
-head(pupa_summary)
-SSP01size<-pupa_summary[,c(1,3,9,14)]
-head(SSP01size)
-chart.Correlation(SSP01size[2:4],
+head(pupa_SSP02)
+SSP02<-pupa_SSP02[,c(1,8:10)]
+head(SSP02)
+chart.Correlation(SSP02[2:4],
                    method="pearson",
                    histogram=TRUE,
                    pch=16)

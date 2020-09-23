@@ -2,7 +2,9 @@
 title: "DGRP Genetic Arch"
 author: "Alexander Shingleton"
 date: "9/8/2020"
-output: pdf_document
+output:
+  word_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -36,17 +38,7 @@ require(Deducer)
 R.version
 ```
 
-#Questions
-
-To better understand how SSD and SSP impact each other, we will test the following hypotheses:
-
-**Bigger scope: I want to test if the variation in SSD is due variation in female size generated both by the environment, and genetic variation.**
-
-To keep in mind: if SSD is associated with SSP, that means a part of the genetic variation that affects SSD is due to the genetic variation in SSP.
-
-We know that female plasticity is higher than male's and we want to check if the variation in plasticity is due to female variation in plasticity.
-
-That would imply that evolutionarily, female size would tend to be the one changing and generating SSD.
+#Outline of questions
 
 - Section 1: SSD in fed flies
   - Question 1.1: Is there Sexual Size Dimorphism in the DGRP lines.
@@ -120,7 +112,7 @@ filter(n() >=10)
 
 df_sub<-na.omit(df_sub,cols=pupa) #195 lines, and 17147 rows
 
-blocktest<-lm(data=df_sub, pupa~block)
+blocktest<-lm(pupa~block,data=df_sub)
 summary(blocktest)
 
 #move residuals to dataframe
@@ -166,14 +158,14 @@ anova(SSD)
 ```
 
 
-```{r}
+```{r,message=FALSE, warning=FALSE}
 # plotting male and female size mean
 df0 %>%
   ggplot( aes(x=sex, y=pupa, fill=sex)) +
     geom_boxplot() +
     scale_fill_viridis(discrete = TRUE, alpha=0.6) +
     geom_jitter(color="black", size=0.4, alpha=0.2) +
-    theme_ipsum() +
+    #theme_ipsum() +
     theme(
       legend.position="none",
       plot.title = element_text(size=11)
@@ -184,7 +176,7 @@ df0 %>%
 
 Answer 1.1: Yes, there is sexual size dimorphism in the DGRP flies, and females are larger than males on average.
 
-## Question 1.2: Do we see a genetic variation of SSD in the DGRP lines.
+## Question 1.2: Do we see a genetic variation of SSD in the DGRP lines?
 
 
 ### Comparing two models using ANOVA
@@ -270,7 +262,7 @@ qqmath(ranef(model1))
 ```
 We have two plots, one for line and one for block
 
-## Question 1.3: Is the SSD genetic variation due to a genetic variation in male or in female size?
+## Question 1.3: Is SSD genetic variation due to the genetic variation in male or in female size?
 To test this, I need to look at the correlation between SSD and male size and SSD and female size, the correlation that is higher means that that sex contributes the most to the SSD variation. 
 
 I need to calculate summary for pupa female size, pupa male size and SSD.
@@ -285,7 +277,6 @@ head(df0_mean)
 df0_mean<-df0_mean %>%
   separate(Group.1, c("line", "sex","day"), "_")
 head(df0_mean)
-df0_mean$pupa<-df0_mean$pupa_noblock
 df0_mean
 ```
 
@@ -316,7 +307,7 @@ df0_mean_2<-merge(x=df0_mean_F, y=df0_mean_M, by.x="line", by.y="line")
 head(df0_mean_2)
 
 #remove extra columns
-df0_mean_2<-df0_mean_2[,c(1,4,8)] #line, pupa_noblockF and pupa_noblockM
+df0_mean_2<-df0_mean_2[,c(1,4,7)] #line, pupa_noblockF and pupa_noblockM
 colnames(df0_mean_2) <- c("line", "pupaF", "pupaM") #rename col
 
 df0_mean<-df0_mean_2 #move back to df0_mean
@@ -413,14 +404,17 @@ length(unique(df2$line)) #88 lines
 # Testing effect of sex in pupa size, with random effect for line and block.
 SSD2<-lmer(pupa~sex+(1|line) +(1|block), REML=TRUE, data=df2)
 summary(SSD2)
-anova(SSD2)
+Anova(SSD2)
 ```
 
-SSD still exists at 2 day starvation
+SSD is present at 2 day starvation
 
 
-How do I see if the SSDs between treatment are the same? If they are the same, does it mean that would be correlated? But that doesn't mean that if they are correlated, they are from the same female variation. So let's test that
+How do I see if the SSDs are the same?
+- I could check if SSD average is the same
+- Then check their correlation
 
+First I need to calculate SSD1 and SSD2
 ```{r}
 #SSD1
 # calculate size mean for male and female
@@ -486,7 +480,7 @@ length(unique(df2_mean$line)) #59 lines left after I calculate SSD2
 
 ##Question 2.2: Does overall SSD increase or decrease when the flies are starved? Our hypothesis is that overall SSD should decrease
 
-To make the boxplot, I initially merges SSDs dataframe but it discards all lines that do not have SSD2, so this time I will rbind the dataframes
+To make the boxplot, I initially merged SSDs dataframes but it discards all lines that do not have SSD2, so this time I will rbind the dataframes to keep a maximum number of rows
 
 ```{r}
 #combining SSDs values without discarding rows, which would happen if I merged the dataframes (we would end up with 59 lines for all SSD2)
@@ -513,7 +507,7 @@ SSD_all %>%
     geom_boxplot() +
     scale_fill_viridis(discrete = TRUE, alpha=0.6) +
     geom_jitter(color="black", size=0.4, alpha=0.2) +
-    theme_ipsum() +
+    #theme_ipsum() +
     theme(
       legend.position="none",
       plot.title = element_text(size=11)
@@ -543,10 +537,15 @@ model.tables(SSDtest, type="means", se = TRUE)
 TukeyHSD(SSDtest, which = "day")
 ```
 
-We see that when starved, SSD decreases significantly but the number of days of starvation (1 or 2) does not change SSD significantly.
+SSD0 and SSD1 are significantly different, with SSD0 > SSD1 
+SSD0 and SSD2 are significantly different (p=0.0451745), SSD0 > SSD2
+SSD1 and SSD2 are not significantly different
+
+Starvation decreases SSD but it does not change at different levels of starvation. high p value of SSD0 vs SSD2 due to low number of lines?
+Should I fit lmer with day0 and day2 raw data subset instead?
 
 
-## Question 2.3: Does the SSD in starved conditions vary the same way as in fed flies?
+## Question 2.3: Does SSD in starved conditions vary, and does it covary with SSD0?
 First, we want to see if there is genetic variation in SSD1 and SSD2
 ### SSD1
 ```{r}
@@ -583,23 +582,23 @@ pchisq(q = LR.model, df=nlevels(df1$line), lower=F)
 Finally, we can conduct a parametric bootstrap to compare the two models.
 
 ```{r echo=FALSE, message = FALSE, warning=FALSE}
-pbtest<-PBmodcomp(model1, model2, nsim=1000, details = 1)
-summary(pbtest)
+#pbtest<-PBmodcomp(model1, model2, nsim=1000, details = 1)
+#summary(pbtest)
 ```
 
 ### Finally using Bayesian Analysis
 
 ```{r,message=FALSE, warning=FALSE}
-prior.2 <-list(R=list(V=0.01, nu=0.002), 
-               G=list(G1=list(V=0.01*diag(1), nu=0.002),
-                      G2=list(V=0.01*diag(2), nu=0.002)))
+#prior.2 <-list(R=list(V=0.01, nu=0.002), 
+#               G=list(G1=list(V=0.01*diag(1), nu=0.002),
+ #                     G2=list(V=0.01*diag(2), nu=0.002)))
 
-model1M.MCMC <- MCMCglmm(pupa ~ 1 + sex, 
-  random=~block + us(1 + sex):line,
-  prior = prior.2, burnin = 5000, nitt = 20000, thin = 10,
-  verbose = F, pr = T,
-  data=df1)
-summary(model1M.MCMC)
+#model1M.MCMC <- MCMCglmm(pupa ~ 1 + sex, 
+#  random=~block + us(1 + sex):line,
+ # prior = prior.2, burnin = 5000, nitt = 20000, thin = 10,
+#  verbose = F, pr = T,
+ # data=df1)
+#summary(model1M.MCMC)
 ```
 
 
@@ -669,23 +668,23 @@ pchisq(q = LR.model, df=nlevels(df2$line), lower=F)
 Finally, we can conduct a parametric bootstrap to compare the two models.
 
 ```{r echo=FALSE, message = FALSE, warning=FALSE}
-pbtest<-PBmodcomp(model1, model2, nsim=1000, details = 1)
-summary(pbtest)
+#pbtest<-PBmodcomp(model1, model2, nsim=1000, details = 1)
+#summary(pbtest)
 ```
 
 ### Finally using Bayesian Analysis
 
 ```{r,message=FALSE, warning=FALSE}
-prior.2 <-list(R=list(V=0.01, nu=0.002), 
-               G=list(G1=list(V=0.01*diag(1), nu=0.002),
-                      G2=list(V=0.01*diag(2), nu=0.002)))
+#prior.2 <-list(R=list(V=0.01, nu=0.002), 
+ #              G=list(G1=list(V=0.01*diag(1), nu=0.002),
+  #                    G2=list(V=0.01*diag(2), nu=0.002)))
 
-model1M.MCMC <- MCMCglmm(pupa ~ 1 + sex, 
-  random=~block + us(1 + sex):line,
-  prior = prior.2, burnin = 5000, nitt = 20000, thin = 10,
-  verbose = F, pr = T,
-  data=df2)
-summary(model1M.MCMC)
+#model1M.MCMC <- MCMCglmm(pupa ~ 1 + sex, 
+ # random=~block + us(1 + sex):line,
+  #prior = prior.2, burnin = 5000, nitt = 20000, thin = 10,
+# verbose = F, pr = T,
+ # data=df2)
+#summary(model1M.MCMC)
 ```
 
 
@@ -727,7 +726,6 @@ Does that variation correlate with SSD0?
 If SSD0 covaries with SSD1/SSD2, that means we should not see a difference in plasticity. We first can visualize how SSD changes across lineages.
 
 ```{r}
-library(tidyverse)
 
 ggplot(SSD_all, aes(x=reorder(line,SSD), y=SSD)) +
   geom_col(aes(fill = day)) +
@@ -830,39 +828,20 @@ If SSP covaries with SSD0, that means that we have variation in fed flies. If SS
 
 ##Question 3.1: Is there SSP when we look at fed vs starved flies?
 
-### SSP01: between fed and 1 day starved flies
-```{r}
-# use subset Day 1 and Day 0
-df01<-subset(df_sub, day=="D0"|day=="D1")
-df01<-na.omit(df01, cols="pupa") #1447  rows
-
-SSP01_test<-lmer(pupa~sex*day+(1|line)+(1|block), REML=TRUE, data=df01) #random effect, there is variation in sex by line and there is variation in plasticity by line.
-summary(SSP01_test)
-Anova(SSP01_test)
-
-```
-
-### SSP02: between fed and 1 day starved flies
-```{r}
-# use subset Day 1 and Day 0
-df02<-subset(df, day=="D0"|day=="D2")
-df02<-na.omit(df02, cols="pupa") #10738 rows
-SSP02_test<-lmer(pupa~sex*day+(1|line)+(1|block), REML=TRUE, data=df02) #random effect, there is variation in sex by line and there is variation in plasticity by line.
-summary(SSP02_test)
-Anova(SSP02_test)
-
-```
+### SSP: between fed and 1 day starved flies
 
 
 
 ##Question 3.2: Does this SSP vary in the DGRP flies?
-### SSP01
+### SSP
 ```{r,message=FALSE, warning=FALSE}
 # we want to compare effect of sex and day of starvation on pupal size. I am using df01, subset off data day 0 and day1
 
-model2<-lmer(pupa~sex*day+(1|line)+(1|block), data=df01)
-model1<-lmer(pupa~sex*day+(sex+day|line)+(1|block), data=df01)
+model2<-lmer(pupa~sex*day+(sex+day|line)+(1|block), data=df_sub) #there is randomness of sex and also the effect of day
+model1<-lmer(pupa~sex*day+(sex*day|line)+(1|block), data=df_sub) #basic model
 anova(model1,model2)
+Anova(model1) #there is SSP
+summary(model1)
 ```
 
 Model 1 is better.
@@ -1156,76 +1135,55 @@ The highest correlation is between SSD1 and SSP01, and it is a negative correlat
 #### Correlation SSP01, female Day 1 and male Day 1 size
 
 ```{r}
-head(pupa_SSP02)
-SSP02<-pupa_SSP02[,c(1,8:10)]
-head(SSP02)
-chart.Correlation(SSP02[2:4],
+head(pupa_SSP01)
+SSP01_size<-pupa_SSP01[,c(1,3,6,8)]
+head(SSP01_size)
+chart.Correlation(SSP01_size[2:4],
                    method="pearson",
                    histogram=TRUE,
                    pch=16)
 
 
 ```
-There is almost no correlation between SSP01 and male or female size in Day 1 starvation. That means that SSP01 covaries negatively with SSD01, when the difference in plasticity is higher, then sexual size dimorphism decreases. We assumed that this covariation was created by the variation in female size in Day1, but it does not seem to be the case. 
+There is almost no correlation between SSP01 and male and weak correlation with female size in Day 1 starvation. That means that SSP01 covaries negatively with SSD01,(when the difference in plasticity is higher, then sexual size dimorphism decreases) We assumed that this covariation was created by the variation in female size in Day1, but it does not explain it very strongly? 
 
 ##### Do we have the same trend in SSP02, SSD0 and SSD2?
 
 ```{r}
-SSP02<-pupa_summary[c(1,15,17,19)]
+head(pupa_SSP02)
+SSP02<-pupa_SSP02[c(1,8:10)]
 chart.Correlation(SSP02[2:4],
                    method="pearson",
                    histogram=TRUE,
                    pch=16)
 
 ```
-SSP02, covaries partly with SSD0 positively and SSD2 negatively.
-- The higher difference in plasticity between sexes, the higher there is a difference in sexes in fed flies
+SSP02 correlates the most with SSD2 and negatively, same as we found between SSP01 and SSD1.
 
-
-If SSP covaries with SSD0, that means that we have variation in fed flies. If SSP covaries with starved flies, we have variation in the reduction of flies size.
+If SSPs covary wit starved SSDs, that means that the variation in starved flies is more important than the variation in fed flies.
 
 ### Question 3.4: If it is due to SSD in either fed or starved flies, is it because the females vary more or the males vary more in size?
 
 
-For SSP02, we see that both SSD0 and SSD2 covary but in a reverse way. Let's see first if SSD0 covariation with SSP02 is due to female size variation as seen in SSD0 vs female size.
+SSP02 covaries negatively with SSD2, which sex at Day 2 contributes to SSD2 variation?
 
 ```{r}
-head(pupa_summary)
-SSP02size0<-pupa_summary[,c(1,2,8,15)]
-head(SSP02size0)
-chart.Correlation(SSP02size0[2:4],
+pupa_SSP02
+SSP02size<-pupa_SSP02[,c(1,3,6,8)]
+head(SSP02size)
+chart.Correlation(SSP02size[2:4],
                    method="pearson",
                    histogram=TRUE,
                    pch=16)
 
 
 ```
-So we don't see a correlation between SSP02 and fed female and male size.
 
-There is still an negative correlation between SSP02 and SSD2, rsquare:-.57, so I will check the correlation with 2 day starved female and male size
-
-
-```{r}
-head(pupa_summary)
-SSP02size2<-pupa_summary[,c(1,4,10,15)]
-head(SSP02size2)
-chart.Correlation(SSP02size2[2:4],
-                   method="pearson",
-                   histogram=TRUE,
-                   pch=16)
-
-
-```
-Here we there is covariation between female size in starved flies and SSP. 
-  
-By examining plasticity generated in day 1 starved flies, we cannot see that SSP01 is generated by the variation of female size in starved conditions, even if we see a correlation between SSP01 and SSD1.
-
-However, when we look at SSP02, female size variation in 2 day starvation correlates with SSP02.This happens even though SSP02 covariates also with both SSD0 and SSD2. Does it mean that the more the flies are starve, the moree female size
 
 
 ### Question 3.5: Is the variation causing SSP (Question 3.4) the same as the variation caused by SSD in Question 1.3?
 
-We saw that we only see a covariation between SSP and pupal size when we examined day0 and day2 plasticity. In that case, SSP02 is correlated negatively with female size in day2 starvation. 
+We saw that we only see a covariation between SSP and SSD starved, and female starved. 
 
 In Question 1.3, we found that SSD0 (in fed flies) is correlated with fed female size, but that fed female size variation does not correlate with SSPs. 
 
@@ -1235,8 +1193,8 @@ If there is no direct correlation between SSP and SSD in fed flies, let's check 
 
 #### Correlation SSP01, plasticity female, plasticity male
 ```{r}
-head(pupa_summary)
-SSP01_plast<-pupa_summary[,c(1,5,11,14)]
+head(pupa_SSP01)
+SSP01_plast<-pupa_SSP01[,c(1,4,7,8)]
 head(SSP01_plast)
 chart.Correlation(SSP01_plast[2:4],
                    method="pearson",
@@ -1244,12 +1202,12 @@ chart.Correlation(SSP01_plast[2:4],
                    pch=16)
 
 ```
-SSP01 is correlated with plasticity in female.
+SSP01 is correlated with female plasticity. 
 
 
 ```{r}
-head(pupa_summary)
-SSP02_plast<-pupa_summary[,c(1,6,12,15)]
+head(pupa_SSP02)
+SSP02_plast<-pupa_SSP02[,c(1,4,7,8)]
 head(SSP02_plast)
 chart.Correlation(SSP02_plast[2:4],
                    method="pearson",
@@ -1259,7 +1217,7 @@ chart.Correlation(SSP02_plast[2:4],
 
 ```
 
-SSP02 is also correlated with female plasticity.
+SSP02 also covaries with female plasticity.
 In both cases, we see that SSPs are correlated with a variation in female plasticity.
 
 Now, I want to see if the variance of female plasticity is significantly different than the variance of male plasticity.
@@ -1272,6 +1230,20 @@ head(SSP01_plast)
 #one tail F test
 
 var.test(SSP01_plast$PF01, SSP01_plast$PM01, alternative = "greater")
+
+```
+Yes the female plasticity varies more than male plasticity
+
+Histogram of female and male plasticity
+```{r}
+SSP01_plast
+plasticity01<-SSP01_plast %>% gather(sex, plasticity, PF01:PM01)
+plasticity01
+
+
+ggplot(plasticity01, aes(x=plasticity, fill=sex, color=sex)) +
+  geom_histogram(position="identity", alpha=0.5, bins=50)
+
 
 ```
 
@@ -1288,10 +1260,16 @@ var.test(SSP02_plast$PF02, SSP02_plast$PM02, alternative = "greater")
 ```
 In both cases, plasticity if female does not vary more than plasticity of male.
 
+```{r}
+SSP02_plast
+plasticity02<-SSP02_plast %>% gather(sex, plasticity, PF02:PM02)
+plasticity02
 
-# Summary
 
-![Summary of analyses](SSD-SSP-SUMMARY.png)
+ggplot(plasticity02, aes(x=plasticity, fill=sex, color=sex)) +
+  geom_histogram(position="identity", alpha=0.5, bins=30)
+
+```
 
 #plots
 ##Compare size male and female fed flies across lines: plotting SSD in decreasing number

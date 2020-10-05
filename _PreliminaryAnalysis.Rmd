@@ -3,6 +3,8 @@ title: "DGRP Genetic Arch"
 author: "Alexander Shingleton"
 date: "9/8/2020"
 output:
+  html_document:
+    keep_md: true
   word_document: default
   pdf_document: default
 editor_options: 

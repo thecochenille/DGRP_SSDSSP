@@ -382,9 +382,8 @@ How is SSD in starved conditions?
 
 - Section 2: SSD in starved flies - use D1
   - Question 2.1: Is SSD in starved flies the same as in fed flies? (do a lmer sex*day on D0 and D1)
-    -  Does SSD increase or decrease when the flies are starved? Our hypothesis is that overall SSD should decrease
-  - Question 2.2: Does the SSD in starved conditions vary the same way as in fed flies?
-    - use a correlation and variance analysis
+  - Question 2.2: Does overall SSD increase or decrease when the flies are starved? Our hypothesis is that overall SSD should decrease
+  - Question 2.3: Does SSD in starved conditions vary, and does it covary with SSD0?
   
 ## Question 2.1: Do we have the same SSD when we change environment?
 ### 1 day starvation data preparation = OK
@@ -411,35 +410,6 @@ SSD still exists at 1 day starvation
 
 
 ### Plots 
-Plot with block effect
-```{r}
-# original pupa size
-all_pupa_plot_1<-SSDtest_plot <- ggplot(df1, aes(x = sex, y = pupa, colour = sex)) +
-      geom_boxplot(alpha=0.3) +
-      theme_classic() +
-   geom_jitter(color="black", size=0.4, alpha=0.2)+
-      theme(legend.position = "none",
-            panel.spacing = unit(1, "lines"))  # adding space between panels
-   
-all_pupa_plot_1 +ggtitle("Body Sexual Size Dimorphism in starved flies")
-
-```
-Plot adjusted no block effect
-```{r}
-#removed block effect pupal size
-(SSDtest_plot_noblock <- ggplot(df1, aes(x = sex, y = pupa_noblock, colour = sex)) +
-      geom_boxplot(alpha=0.3) +
-      theme_classic() +
-   geom_jitter(color="black", size=0.4, alpha=0.2)+
- 
-      theme(legend.position = "none",
-            panel.spacing = unit(1, "lines")) +  # adding space between panels
-   ggtitle("Body Sexual Size Dimorphism in starved flies no block effect")
- )
-```
-
-
-HERE plot of mean size male and female for starved flies
 ```{r}
 #calculate means for each group using pupa_noblock
 df1_mean<-aggregate(df1[, 10], list(df1$group), mean)
@@ -466,7 +436,7 @@ plot4
 
 
 
-##Question 2.2: Does overall SSD increase or decrease when the flies are starved? Our hypothesis is that overall SSD should decrease
+## Question 2.2: Does overall SSD increase or decrease when the flies are starved? Our hypothesis is that overall SSD should decrease
 
 Use df_sub01
 ```{r}
@@ -522,26 +492,6 @@ names(SSD1)[names(SSD1) == "SSD1"] <- "SSD"
 SSD_all<-rbind(SSD0,SSD1)
 head(SSD_all,2)
 ```
-
-SSD boxplot, the overall SSD decreases when flies are starved
-```{r}
-# plotting male and female size mean
-SSD_all %>%
-  ggplot( aes(x=day, y=SSD)) +
-    geom_boxplot() +
-    scale_fill_viridis(discrete = TRUE, alpha=0.6) +
-    geom_jitter(color="black", size=0.4, alpha=0.2) +
-    #theme_ipsum() +
-    theme(
-      legend.position="none",
-      plot.title = element_text(size=11)
-    ) +
-    ggtitle("Sexual Size Dimorphism in DGRP flies at different starving conditions") +
-    xlab("")
-
-```
-SSD decreases at Day1 starvation 
-
 
 
 ## Question 2.3: Does SSD in starved conditions vary, and does it covary with SSD0?
@@ -689,13 +639,9 @@ SSD changes in different food conditions, that means that there is a specific pl
 
 # Section 3: SSP and Male, Female Plasticity
   - Question 3.1: confirming that SSP exists - same test as SSD0 and SSD1 comparison
-  
   - Question 3.2: Does SSP vary genetically?
-  
   - Question 3.3: Is there a covariation between SSP and SSD fed flies?
-  
   - Question 3.4: Which sex plasticity contributes to SSD?
-
 
 ##Question 3.1: Confirming that SSP exists 
 ### SSP: between fed and 1 day starved flies

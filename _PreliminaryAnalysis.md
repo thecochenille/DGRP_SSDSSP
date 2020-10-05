@@ -1,6 +1,6 @@
 ---
 title: "DGRP Genetic Arch"
-author: "Alexander Shingleton"
+author: "Isabelle Vea and Alexander Shingleton"
 date: "9/8/2020"
 output:
   html_document:
@@ -744,9 +744,8 @@ How is SSD in starved conditions?
 
 - Section 2: SSD in starved flies - use D1
   - Question 2.1: Is SSD in starved flies the same as in fed flies? (do a lmer sex*day on D0 and D1)
-    -  Does SSD increase or decrease when the flies are starved? Our hypothesis is that overall SSD should decrease
-  - Question 2.2: Does the SSD in starved conditions vary the same way as in fed flies?
-    - use a correlation and variance analysis
+  - Question 2.2: Does overall SSD increase or decrease when the flies are starved? Our hypothesis is that overall SSD should decrease
+  - Question 2.3: Does SSD in starved conditions vary, and does it covary with SSD0?
   
 ## Question 2.1: Do we have the same SSD when we change environment?
 ### 1 day starvation data preparation = OK
@@ -823,40 +822,6 @@ SSD still exists at 1 day starvation
 
 
 ### Plots 
-Plot with block effect
-
-```r
-# original pupa size
-all_pupa_plot_1<-SSDtest_plot <- ggplot(df1, aes(x = sex, y = pupa, colour = sex)) +
-      geom_boxplot(alpha=0.3) +
-      theme_classic() +
-   geom_jitter(color="black", size=0.4, alpha=0.2)+
-      theme(legend.position = "none",
-            panel.spacing = unit(1, "lines"))  # adding space between panels
-   
-all_pupa_plot_1 +ggtitle("Body Sexual Size Dimorphism in starved flies")
-```
-
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-29-1.png)<!-- -->
-Plot adjusted no block effect
-
-```r
-#removed block effect pupal size
-(SSDtest_plot_noblock <- ggplot(df1, aes(x = sex, y = pupa_noblock, colour = sex)) +
-      geom_boxplot(alpha=0.3) +
-      theme_classic() +
-   geom_jitter(color="black", size=0.4, alpha=0.2)+
- 
-      theme(legend.position = "none",
-            panel.spacing = unit(1, "lines")) +  # adding space between panels
-   ggtitle("Body Sexual Size Dimorphism in starved flies no block effect")
- )
-```
-
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-30-1.png)<!-- -->
-
-
-HERE plot of mean size male and female for starved flies
 
 ```r
 #calculate means for each group using pupa_noblock
@@ -894,7 +859,7 @@ plot4<-ggplot(df1_mean, aes(x = sex, y = pupa_noblock, color=sex)) +
 plot4
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-32-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-30-1.png)<!-- -->
 
 ```r
 #add predicted means
@@ -902,7 +867,7 @@ plot4
 
 
 
-##Question 2.2: Does overall SSD increase or decrease when the flies are starved? Our hypothesis is that overall SSD should decrease
+## Question 2.2: Does overall SSD increase or decrease when the flies are starved? Our hypothesis is that overall SSD should decrease
 
 Use df_sub01
 
@@ -1088,28 +1053,6 @@ head(SSD_all,2)
 ## 2 L101 0.01685776  D0
 ```
 
-SSD boxplot, the overall SSD decreases when flies are starved
-
-```r
-# plotting male and female size mean
-SSD_all %>%
-  ggplot( aes(x=day, y=SSD)) +
-    geom_boxplot() +
-    scale_fill_viridis(discrete = TRUE, alpha=0.6) +
-    geom_jitter(color="black", size=0.4, alpha=0.2) +
-    #theme_ipsum() +
-    theme(
-      legend.position="none",
-      plot.title = element_text(size=11)
-    ) +
-    ggtitle("Sexual Size Dimorphism in DGRP flies at different starving conditions") +
-    xlab("")
-```
-
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-36-1.png)<!-- -->
-SSD decreases at Day1 starvation 
-
-
 
 ## Question 2.3: Does SSD in starved conditions vary, and does it covary with SSD0?
 First, we want to see if there is genetic variation in SSD1
@@ -1238,7 +1181,7 @@ Finally, we can conduct a parametric bootstrap to compare the two models.
 plot(model1)
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-42-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-39-1.png)<!-- -->
 
 ##### QQ plot
 
@@ -1247,7 +1190,7 @@ res_model1=residuals(model1)
 ggqqplot(res_model1)
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-43-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-40-1.png)<!-- -->
 
 ##### Random effect plot
 
@@ -1259,14 +1202,14 @@ qqmath(ranef(model1))
 ## $line
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-44-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-41-1.png)<!-- -->
 
 ```
 ## 
 ## $block
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-44-2.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-41-2.png)<!-- -->
 
 SSD in starved flies varies genetically.
 
@@ -1282,7 +1225,7 @@ plot5<-ggplot(SSD1, aes(x=reorder(line,SSD), y=SSD)) +
 plot5 +labs(x = "DGRP line")
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-45-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-42-1.png)<!-- -->
 
 
 ### Covaration with which sex?
@@ -1312,7 +1255,7 @@ plot6 #stat_cor uses the Pearson correlation
 ## `geom_smooth()` using formula 'y ~ x'
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-46-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-43-1.png)<!-- -->
 
 
 ### Covariation with SSD in fed flies?
@@ -1338,7 +1281,7 @@ ggplot(SSD_all, aes(x=reorder(line,SSD), y=SSD)) +
   coord_flip()
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-47-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-44-1.png)<!-- -->
 Correlation between SSDs. Hypothesis: if SSD changes with environment, which is what we expect, we will not see a correlation between SSD0 and SSD1 and/or SSD2
 
 
@@ -1368,7 +1311,7 @@ plot7
 ## `geom_smooth()` using formula 'y ~ x'
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-48-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-45-1.png)<!-- -->
 Correlation between SSD1 and SSD0, baarely significant and rsquare very low.
 
 It seems that SSD1 may vary differently, does female covariation with SSD0 changes in starved conditions?
@@ -1385,13 +1328,9 @@ SSD changes in different food conditions, that means that there is a specific pl
 
 # Section 3: SSP and Male, Female Plasticity
   - Question 3.1: confirming that SSP exists - same test as SSD0 and SSD1 comparison
-  
   - Question 3.2: Does SSP vary genetically?
-  
   - Question 3.3: Is there a covariation between SSP and SSD fed flies?
-  
   - Question 3.4: Which sex plasticity contributes to SSD?
-
 
 ##Question 3.1: Confirming that SSP exists 
 ### SSP: between fed and 1 day starved flies
@@ -1603,7 +1542,7 @@ res_model1=residuals(model1)
 plot(model1)
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-57-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-54-1.png)<!-- -->
 
 
 #### QQ plot
@@ -1613,7 +1552,7 @@ require(ggpubr)
 ggqqplot(res_model1)
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-58-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-55-1.png)<!-- -->
 
 #### Random effect plot
 
@@ -1625,14 +1564,14 @@ qqmath(ranef(model1))
 ## $line
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-59-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-56-1.png)<!-- -->
 
 ```
 ## 
 ## $block
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-59-2.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-56-2.png)<!-- -->
 
 ### Plot of predicted values
 
@@ -1640,7 +1579,7 @@ qqmath(ranef(model1))
 plot(Effect(c("sex","day"),model1))
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-60-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-57-1.png)<!-- -->
 
 Another plot with fitted values (in color) on raw data in black
 
@@ -1669,7 +1608,7 @@ plot4A<- ggplot(df_sub01_fit,aes(sex, pupa, group=interaction(sex, day))) +
 plot4A
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-61-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-58-1.png)<!-- -->
 
 
 Answer 3.2: There is genetic variation in SSP if we compare fed flies and starved flies.
@@ -1812,7 +1751,7 @@ plot8 <-ggplot(pupa_SSP01, aes(x=reorder(line,SSP01), y=SSP01)) +
 plot8
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-65-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-62-1.png)<!-- -->
 
 
 
@@ -1858,7 +1797,7 @@ plot9
 ## `geom_smooth()` using formula 'y ~ x'
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-66-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-63-1.png)<!-- -->
 
 
 ## Question 3.4: which sex is more plastic?
@@ -1952,7 +1891,7 @@ plot10<-ggplot(pupa_SSP01_gather, aes(x = sex, y = plasticity, color=sex)) +
 plot10
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-69-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-66-1.png)<!-- -->
 
 ```r
 #add predicted values
@@ -1983,7 +1922,7 @@ plot10A
 ## the group aesthetic?
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-70-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-67-1.png)<!-- -->
 
 
 
@@ -2037,7 +1976,7 @@ plot11
 ## `geom_smooth()` using formula 'y ~ x'
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-73-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-70-1.png)<!-- -->
 
 
 
@@ -2060,7 +1999,7 @@ annotate_figure(figure1,
 )
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-74-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-71-1.png)<!-- -->
 
 Figure S1: fitted values for SSD model and SSP model
 
@@ -2072,7 +2011,7 @@ annotate_figure(figureS1,
 )
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-75-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-72-1.png)<!-- -->
 
 Figure S2: same as SSD in fed flies
 
@@ -2091,7 +2030,7 @@ annotate_figure(figureS2,
 )
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-76-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-73-1.png)<!-- -->
 
 Figure S3
 
@@ -2110,7 +2049,7 @@ annotate_figure(figureS3,
 )
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-77-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-74-1.png)<!-- -->
 
 
 
@@ -2132,7 +2071,7 @@ annotate_figure(figure2,
 )
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-78-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-75-1.png)<!-- -->
 
 
 
@@ -2155,7 +2094,7 @@ annotate_figure(figure3,
 )
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-79-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-76-1.png)<!-- -->
 
 
 

@@ -1,6 +1,6 @@
 ---
 title: "DGRP Genetic Arch"
-author: "Alexander Shingleton"
+author: "Isabelle Vea and Alexander Shingleton"
 date: "9/8/2020"
 output:
   html_document:

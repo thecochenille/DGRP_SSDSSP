@@ -196,6 +196,13 @@ stargazer(model1,model2, style="ajps", type="text", title="Sexual Size Dimorphis
 
 Model 1 is better, as AIC and BIC is smaller and log likelihood is higher. The difference of fit between these two models is significant.
 
+Covariance matrix
+```{r}
+vcov(model1)
+
+```
+
+
 #### Do a LRT
 How many parameters for each models
 ```{r,message=FALSE, warning=FALSE}
@@ -583,6 +590,13 @@ plot5 +labs(x = "DGRP line")
 
 
 ### Covaration with which sex?
+
+Covariance matrix
+```{r}
+vcov(model1)
+
+```
+
 Correlation test and plot
 ```{r}
 head(df1_mean,2)
@@ -908,28 +922,36 @@ CAN WE test if plasticity female varies more than plasticity male without using 
 
 ```
 
-## Question 3.3: Is SSD genetic variation correlated with female or male plasticity?
+## Question 3.3: Is SS genetic variation correlated with female or male plasticity?
 
 #### Correlation between SSD and plasticity by sex
 
 ```{r}
 
 head(pupa_SSP01,2)
-SSD_plast<-pupa_SSP01[,c(1,4,7,8,9)]
-head(SSD_plast,2)
+SSP_plast<-pupa_SSP01[,c(1,4,7,8,9)]
+head(SSP_plast,2)
 ```
 
 ##### Plot
 ```{r}
 #reshape data
-SSD_plast_gather<-gather(SSD_plast,key="sex",value="plasticity",PF01:PM01)
+SSP_plast_gather<-gather(SSP_plast,key="sex",value="plasticity",PF01:PM01)
+head(SSP_plast_gather)
 #plot
-plot11 <- ggscatter(SSD_plast_gather, x = "SSD0", y = "plasticity",
+plot11 <- ggscatter(SSP_plast_gather, x = "plasticity", y = "SSP01",
    color = "sex", size=0.5, 
-   add = "reg.line", conf.int = TRUE, alpha=0.5) + stat_cor(aes(color = sex), show.legend=FALSE, size=3)+theme(legend.position = "none")+labs(x="SSD") #stat_cor uses the Pearson correlation
+   add = "reg.line", conf.int = TRUE, alpha=0.5) + stat_cor(aes(color = sex), show.legend=FALSE, size=3)+theme(legend.position = "none")+labs(x="plasticity", y="SSP") #stat_cor uses the Pearson correlation
 #removing legend not working
 plot11
 ```
+Covariance SSP and plasticity
+```{r}
+vcov(model1)
+VarCorr(model1)
+```
+
+
 
 
 
@@ -1012,10 +1034,153 @@ annotate_figure(figure3,
 
 
 
+plasticity  female and size
+```{r}
+
+head(plastF01)
+plastF01_gather<-gather(plastF01,key="sex",value="pupa",pupaFmean_0:pupaFmean_1)
+plot12 <- ggscatter(plastF01_gather, x = "PF01", y = "pupa",
+   color = "sex",
+   add = "reg.line", conf.int = TRUE, alpha=0.5, size=0.5)  +ggpubr::stat_cor(aes(color = sex), size=3) 
+plot12 #stat_cor uses the Pearson correlation
+
+
+```
+
+```{r}
+head(pupa_SSP01,2)
+SSD0_plast<-pupa_SSP01[,c(1,7,4,9)]
+SSD0_plast_gather<-gather(SSD0_plast,key="sex",value="plast-SSD",PF01:SSD0)
+head(SSD0_plast_gather)
+
+plot14 <- ggscatter(SSD0_plast_gather, x = "PM01", y = "plast-SSD",
+   color = "sex",
+   add = "reg.line", conf.int = TRUE, alpha=0.5, size=0.5)  +ggpubr::stat_cor(aes(color = sex), size=3) 
+plot14 #stat_cor uses the Pearson correlation
+
+```
+
+
+# Variance of sum
+Calculate the variance of sum of two variables that are dependent (r!=0)
+formula is:
+var x+-y = var x+ var y +- 2 cor(x,y) *sd x * sd y 
+
+```{r}
+#1 variance of SSD is the variance of difference between female and male size? 
+## data
+head(pupa_SSP01)
+
+x=pupa_SSP01$pupaFmean_0
+y=pupa_SSP01$pupaMmean_0
+
+#formula
+varsumSSD= var(x) + var(y) - 2 * cor(x,y) * sd(x) * sd(y)
+varsumSSD
+```
 
 
 
 
+# Analysis of covariance
+## Goal
+
+We want to understand the impact of male and female size variation on sexual size dimorphism
+
+If we look at the variance sum law, SSD represents the female size-male size. The variance of SSD is therefore the variance of female size-male size. There is a formula to define this variance, and when there is a correlation between female and male size.
+
+The formula is
+variance of female-male = var(female) + var(male) - 2 * corr(female,male) * sd(female) * sd(male)
+
+This means that the correlation, ie scaling relationship between male and female size will affect the variance female-male.
+
+When we look at our data, let's go back to the raw data.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+head(df0,2)
+hist(df0$pupa_noblock)
+
+fitSSD<-lmer(pupa ~ sex + (sex|line)+(1|block),data=df0)
+summary(fitSSD)
+vcov(fitSSD)
+
+#predicted values per line and sex
+SSDpredicted<-coef(fitSSD)$line
+
+typeof(SSDpredicted)
+SSDpredicteddf<-as.data.frame(SSDpredicted)
+head(SSDpredicteddf)
+
+SSDpreddf <- cbind(Line = rownames(SSDpredicteddf), SSDpredicteddf)
+rownames(SSDpreddf) <- 1:nrow(SSDpredicteddf)
+head(SSDpreddf)
+SSDpreddf[2]
+names(SSDpreddf)[2] <-"female"
+head(SSDpreddf)
+
+SSDpreddf$male<-SSDpreddf$female+SSDpreddf$sexM
+head(SSDpreddf)
+
+SSDpreddf$SSD<-SSDpreddf$female-SSDpreddf$male
+head(SSDpreddf)
+SSDpreddf<-SSDpreddf[,c(1,2,4,5)]
+head(SSDpreddf)
+
+
+```
+I have the predicted means per line for each sex
+
+look at the correlation between
+```{r}
+fm_plot <- ggscatter(SSDpreddf, x = "male", y = "female",
+   add = "reg.line", conf.int = TRUE, alpha=0.5, size=0.5) +theme(legend.position="none")+labs(x="male pupa", y="female pupa") +ggpubr::stat_cor(aes(), size=3) +ggtitle("Correlation between female and male size in fed flies")+geom_abline(slope=1,intercept=0)
+fm_plot 
+```
+There is a high correlation between female and male pupal size
+
+What parameter reflects the scatter of the relationship and what parameter reflects the slope?
 
 
 
+
+```{r}
+# Computing all statistics needed to calculate slope of regression line
+
+N <- nrow(SSDpreddf)
+r <- cor(SSDpreddf$female, SSDpreddf$male)
+mean_female <- mean(SSDpreddf$female)
+sd_female <- sd(SSDpreddf$female)
+mean_male <- mean(SSDpreddf$male)
+sd_male <- sd(SSDpreddf$male)
+
+SSDpreddf_summary <- as.data.frame(cbind(N,r,mean_female,sd_female,mean_male,sd_male))
+
+# It is known that mean x , and mean y always lie on line of best fit. So using y=mx+c form, we can compute c
+
+# Now calculating slope and intercept and adding to the dataframe
+SSDpreddf_summary %>% mutate(slope= r*(sd_female/sd_male),
+                         intercept = mean_female - ((r*(sd_female/sd_male))*mean_male))
+
+
+```
+
+```{r}
+SSDpreddf_gather<-gather(SSDpreddf, key="sex",value="pupa", female:male)
+
+                  
+plot <- ggscatter(SSDpreddf_gather, x = "SSD", y = "pupa",
+   color = "sex",
+   add = "reg.line", conf.int = TRUE, alpha=0.5, size=0.5) +theme(legend.position="none") +ggpubr::stat_cor(aes(color = sex), size=3) 
+plot #stat_cor uses the Pearson correlation
+
+```
+
+
+# Simulate data using a linear regression
+
+## Scenario 1
+The slope is the same as my real data but I want to remove the scatter around the slope, meaning I want to remove the least square error.
+
+## Scenario 2
+I want to keep the scatter but change the slope relationship to 1.

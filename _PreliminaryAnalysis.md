@@ -427,6 +427,20 @@ stargazer(model1,model2, style="ajps", type="text", title="Sexual Size Dimorphis
 
 Model 1 is better, as AIC and BIC is smaller and log likelihood is higher. The difference of fit between these two models is significant.
 
+Covariance matrix
+
+```r
+vcov(model1)
+```
+
+```
+## 2 x 2 Matrix of class "dpoMatrix"
+##               (Intercept)          sexM
+## (Intercept)  3.082853e-04 -1.156162e-05
+## sexM        -1.156162e-05  1.201604e-05
+```
+
+
 #### Do a LRT
 How many parameters for each models
 
@@ -517,7 +531,7 @@ Finally, we can conduct a parametric bootstrap to compare the two models.
 plot(model1)
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
 
 
 
@@ -529,7 +543,7 @@ res_model1=residuals(model1)
 ggqqplot(res_model1)
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
 
 
 ##### Random effect plot
@@ -542,14 +556,14 @@ qqmath(ranef(model1))
 ## $line
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
 
 ```
 ## 
 ## $block
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-18-2.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-19-2.png)<!-- -->
 
 
 ### Plot mean size female and male per line + SSD per line
@@ -604,7 +618,7 @@ plot1<-ggplot(df0_mean, aes(x = sex, y = pupa_noblock, color=sex)) +
 plot1
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
 
 ```r
 #add predicted means
@@ -618,7 +632,7 @@ library(effects)
 plot(Effect(c("sex"),model1))
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
 
 
 ```r
@@ -645,7 +659,7 @@ plot1A<-ggplot(df0_fit,aes(sex, pupa, group=interaction(sex, day))) +
 plot1A
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
 
 
 
@@ -695,7 +709,7 @@ plot2 +
   labs(x = "DGRP line")
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
 
 
 
@@ -718,7 +732,7 @@ plot3 #stat_cor uses the Pearson correlation
 ## `geom_smooth()` using formula 'y ~ x'
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
 
 In fed flies, SSD covaries with female size.
 
@@ -734,7 +748,7 @@ ggarrange(ggarrange(plot1,plot3,ncol=2, labels=c("A","C")),plot2,nrow=2, heights
 ## `geom_smooth()` using formula 'y ~ x'
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
 
 
 # Section 2: SSD in starved flies
@@ -859,7 +873,7 @@ plot4<-ggplot(df1_mean, aes(x = sex, y = pupa_noblock, color=sex)) +
 plot4
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-30-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-31-1.png)<!-- -->
 
 ```r
 #add predicted means
@@ -1181,7 +1195,7 @@ Finally, we can conduct a parametric bootstrap to compare the two models.
 plot(model1)
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-39-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-40-1.png)<!-- -->
 
 ##### QQ plot
 
@@ -1190,7 +1204,7 @@ res_model1=residuals(model1)
 ggqqplot(res_model1)
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-40-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-41-1.png)<!-- -->
 
 ##### Random effect plot
 
@@ -1202,14 +1216,14 @@ qqmath(ranef(model1))
 ## $line
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-41-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-42-1.png)<!-- -->
 
 ```
 ## 
 ## $block
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-41-2.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-42-2.png)<!-- -->
 
 SSD in starved flies varies genetically.
 
@@ -1225,10 +1239,24 @@ plot5<-ggplot(SSD1, aes(x=reorder(line,SSD), y=SSD)) +
 plot5 +labs(x = "DGRP line")
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-42-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-43-1.png)<!-- -->
 
 
 ### Covaration with which sex?
+
+Covariance matrix
+
+```r
+vcov(model1)
+```
+
+```
+## 2 x 2 Matrix of class "dpoMatrix"
+##               (Intercept)          sexM
+## (Intercept)  2.465647e-04 -1.334986e-05
+## sexM        -1.334986e-05  1.718836e-05
+```
+
 Correlation test and plot
 
 ```r
@@ -1255,7 +1283,7 @@ plot6 #stat_cor uses the Pearson correlation
 ## `geom_smooth()` using formula 'y ~ x'
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-43-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-45-1.png)<!-- -->
 
 
 ### Covariation with SSD in fed flies?
@@ -1281,7 +1309,7 @@ ggplot(SSD_all, aes(x=reorder(line,SSD), y=SSD)) +
   coord_flip()
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-44-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-46-1.png)<!-- -->
 Correlation between SSDs. Hypothesis: if SSD changes with environment, which is what we expect, we will not see a correlation between SSD0 and SSD1 and/or SSD2
 
 
@@ -1311,7 +1339,7 @@ plot7
 ## `geom_smooth()` using formula 'y ~ x'
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-45-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-47-1.png)<!-- -->
 Correlation between SSD1 and SSD0, baarely significant and rsquare very low.
 
 It seems that SSD1 may vary differently, does female covariation with SSD0 changes in starved conditions?
@@ -1542,7 +1570,7 @@ res_model1=residuals(model1)
 plot(model1)
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-54-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-56-1.png)<!-- -->
 
 
 #### QQ plot
@@ -1552,7 +1580,7 @@ require(ggpubr)
 ggqqplot(res_model1)
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-55-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-57-1.png)<!-- -->
 
 #### Random effect plot
 
@@ -1564,14 +1592,14 @@ qqmath(ranef(model1))
 ## $line
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-56-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-58-1.png)<!-- -->
 
 ```
 ## 
 ## $block
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-56-2.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-58-2.png)<!-- -->
 
 ### Plot of predicted values
 
@@ -1579,7 +1607,7 @@ qqmath(ranef(model1))
 plot(Effect(c("sex","day"),model1))
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-57-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-59-1.png)<!-- -->
 
 Another plot with fitted values (in color) on raw data in black
 
@@ -1608,7 +1636,7 @@ plot4A<- ggplot(df_sub01_fit,aes(sex, pupa, group=interaction(sex, day))) +
 plot4A
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-58-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-60-1.png)<!-- -->
 
 
 Answer 3.2: There is genetic variation in SSP if we compare fed flies and starved flies.
@@ -1751,7 +1779,7 @@ plot8 <-ggplot(pupa_SSP01, aes(x=reorder(line,SSP01), y=SSP01)) +
 plot8
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-62-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-64-1.png)<!-- -->
 
 
 
@@ -1797,7 +1825,7 @@ plot9
 ## `geom_smooth()` using formula 'y ~ x'
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-63-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-65-1.png)<!-- -->
 
 
 ## Question 3.4: which sex is more plastic?
@@ -1891,7 +1919,7 @@ plot10<-ggplot(pupa_SSP01_gather, aes(x = sex, y = plasticity, color=sex)) +
 plot10
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-66-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-68-1.png)<!-- -->
 
 ```r
 #add predicted values
@@ -1922,7 +1950,7 @@ plot10A
 ## the group aesthetic?
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-67-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-69-1.png)<!-- -->
 
 
 
@@ -1930,7 +1958,7 @@ CAN WE test if plasticity female varies more than plasticity male without using 
 
 
 
-## Question 3.3: Is SSD genetic variation correlated with female or male plasticity?
+## Question 3.3: Is SS genetic variation correlated with female or male plasticity?
 
 #### Correlation between SSD and plasticity by sex
 
@@ -1949,8 +1977,8 @@ head(pupa_SSP01,2)
 ```
 
 ```r
-SSD_plast<-pupa_SSP01[,c(1,4,7,8,9)]
-head(SSD_plast,2)
+SSP_plast<-pupa_SSP01[,c(1,4,7,8,9)]
+head(SSP_plast,2)
 ```
 
 ```
@@ -1963,11 +1991,25 @@ head(SSD_plast,2)
 
 ```r
 #reshape data
-SSD_plast_gather<-gather(SSD_plast,key="sex",value="plasticity",PF01:PM01)
+SSP_plast_gather<-gather(SSP_plast,key="sex",value="plasticity",PF01:PM01)
+head(SSP_plast_gather)
+```
+
+```
+##   line       SSP01       SSD0  sex plasticity
+## 1 L100  0.12785279 0.13857467 PF01  0.1890187
+## 2 L101 -0.05586865 0.01685776 PF01  0.1556325
+## 3 L105 -0.09091984 0.04594622 PF01  0.1024221
+## 4 L109 -0.02500483 0.07890658 PF01  0.2159722
+## 5 L136  0.06726144 0.11617428 PF01  0.2801066
+## 6 L138  0.06245187 0.08359213 PF01  0.2221041
+```
+
+```r
 #plot
-plot11 <- ggscatter(SSD_plast_gather, x = "SSD0", y = "plasticity",
+plot11 <- ggscatter(SSP_plast_gather, x = "plasticity", y = "SSP01",
    color = "sex", size=0.5, 
-   add = "reg.line", conf.int = TRUE, alpha=0.5) + stat_cor(aes(color = sex), show.legend=FALSE, size=3)+theme(legend.position = "none")+labs(x="SSD") #stat_cor uses the Pearson correlation
+   add = "reg.line", conf.int = TRUE, alpha=0.5) + stat_cor(aes(color = sex), show.legend=FALSE, size=3)+theme(legend.position = "none")+labs(x="plasticity", y="SSP") #stat_cor uses the Pearson correlation
 #removing legend not working
 plot11
 ```
@@ -1976,7 +2018,37 @@ plot11
 ## `geom_smooth()` using formula 'y ~ x'
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-70-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-72-1.png)<!-- -->
+Covariance SSP and plasticity
+
+```r
+vcov(model1)
+```
+
+```
+## 4 x 4 Matrix of class "dpoMatrix"
+##               (Intercept)          sexM         dayD1    sexM:dayD1
+## (Intercept)  2.453356e-04 -1.175746e-05 -1.771798e-05  9.868693e-06
+## sexM        -1.175746e-05  1.183583e-05  7.911808e-06 -9.998962e-06
+## dayD1       -1.771798e-05  7.911808e-06  4.612580e-05 -1.715132e-05
+## sexM:dayD1   9.868693e-06 -9.998962e-06 -1.715132e-05  2.401007e-05
+```
+
+```r
+VarCorr(model1)
+```
+
+```
+##  Groups   Name        Std.Dev. Corr                
+##  line     (Intercept) 0.106148                     
+##           sexM        0.027318 -0.489              
+##           dayD1       0.078447 -0.280  0.321       
+##           sexM:dayD1  0.030884  0.318 -0.459 -0.519
+##  block    (Intercept) 0.039902                     
+##  Residual             0.123270
+```
+
+
 
 
 
@@ -1999,7 +2071,7 @@ annotate_figure(figure1,
 )
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-71-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-74-1.png)<!-- -->
 
 Figure S1: fitted values for SSD model and SSP model
 
@@ -2011,7 +2083,7 @@ annotate_figure(figureS1,
 )
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-72-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-75-1.png)<!-- -->
 
 Figure S2: same as SSD in fed flies
 
@@ -2030,7 +2102,7 @@ annotate_figure(figureS2,
 )
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-73-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-76-1.png)<!-- -->
 
 Figure S3
 
@@ -2049,7 +2121,7 @@ annotate_figure(figureS3,
 )
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-74-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-77-1.png)<!-- -->
 
 
 
@@ -2071,7 +2143,7 @@ annotate_figure(figure2,
 )
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-75-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-78-1.png)<!-- -->
 
 
 
@@ -2094,16 +2166,126 @@ annotate_figure(figure3,
 )
 ```
 
-![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-76-1.png)<!-- -->
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-79-1.png)<!-- -->
 
 
 
 
 
+plasticity  female and size
+
+```r
+head(plastF01)
+```
+
+```
+##   line pupaFmean_0 pupaFmean_1      PF01
+## 1 L100  0.23636559  0.04734688 0.1890187
+## 2 L101  0.08156526 -0.07406721 0.1556325
+## 3 L105 -0.04813763 -0.15055976 0.1024221
+## 4 L109  0.04641259 -0.16955959 0.2159722
+## 5 L136  0.17411774 -0.10598883 0.2801066
+## 6 L138  0.17581337 -0.04629073 0.2221041
+```
+
+```r
+plastF01_gather<-gather(plastF01,key="sex",value="pupa",pupaFmean_0:pupaFmean_1)
+plot12 <- ggscatter(plastF01_gather, x = "PF01", y = "pupa",
+   color = "sex",
+   add = "reg.line", conf.int = TRUE, alpha=0.5, size=0.5)  +ggpubr::stat_cor(aes(color = sex), size=3) 
+plot12 #stat_cor uses the Pearson correlation
+```
+
+```
+## `geom_smooth()` using formula 'y ~ x'
+```
+
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-80-1.png)<!-- -->
 
 
+```r
+head(pupa_SSP01,2)
+```
+
+```
+##   line pupaFmean_0 pupaFmean_1      PF01 pupaMmean_0 pupaMmean_1       PM01
+## 1 L100  0.23636559  0.04734688 0.1890187  0.09779092   0.0366250 0.06116592
+## 2 L101  0.08156526 -0.07406721 0.1556325  0.06470751  -0.1467936 0.21150112
+##         SSP01       SSD0       SSD1
+## 1  0.12785279 0.13857467 0.01072188
+## 2 -0.05586865 0.01685776 0.07272640
+```
+
+```r
+SSD0_plast<-pupa_SSP01[,c(1,7,4,9)]
+SSD0_plast_gather<-gather(SSD0_plast,key="sex",value="plast-SSD",PF01:SSD0)
+head(SSD0_plast_gather)
+```
+
+```
+##   line       PM01  sex plast-SSD
+## 1 L100 0.06116592 PF01 0.1890187
+## 2 L101 0.21150112 PF01 0.1556325
+## 3 L105 0.19334197 PF01 0.1024221
+## 4 L109 0.24097700 PF01 0.2159722
+## 5 L136 0.21284513 PF01 0.2801066
+## 6 L138 0.15965223 PF01 0.2221041
+```
+
+```r
+plot14 <- ggscatter(SSD0_plast_gather, x = "PM01", y = "plast-SSD",
+   color = "sex",
+   add = "reg.line", conf.int = TRUE, alpha=0.5, size=0.5)  +ggpubr::stat_cor(aes(color = sex), size=3) 
+plot14 #stat_cor uses the Pearson correlation
+```
+
+```
+## `geom_smooth()` using formula 'y ~ x'
+```
+
+![](_PreliminaryAnalysis_files/figure-html/unnamed-chunk-81-1.png)<!-- -->
 
 
+# Variance of sum
+Calculate the variance of sum of two variables that are dependent (r!=0)
+formula is:
+var x+-y = var x+ var y +- 2 cor(x,y) *sd x * sd y 
 
+
+```r
+#1 variance of SSD is the variance of difference between female and male size? 
+## data
+head(pupa_SSP01)
+```
+
+```
+##   line pupaFmean_0 pupaFmean_1      PF01 pupaMmean_0 pupaMmean_1       PM01
+## 1 L100  0.23636559  0.04734688 0.1890187  0.09779092  0.03662500 0.06116592
+## 2 L101  0.08156526 -0.07406721 0.1556325  0.06470751 -0.14679362 0.21150112
+## 3 L105 -0.04813763 -0.15055976 0.1024221 -0.09408385 -0.28742581 0.19334197
+## 4 L109  0.04641259 -0.16955959 0.2159722 -0.03249400 -0.27347100 0.24097700
+## 5 L136  0.17411774 -0.10598883 0.2801066  0.05794346 -0.15490167 0.21284513
+## 6 L138  0.17581337 -0.04629073 0.2221041  0.09222124 -0.06743099 0.15965223
+##         SSP01       SSD0       SSD1
+## 1  0.12785279 0.13857467 0.01072188
+## 2 -0.05586865 0.01685776 0.07272640
+## 3 -0.09091984 0.04594622 0.13686606
+## 4 -0.02500483 0.07890658 0.10391141
+## 5  0.06726144 0.11617428 0.04891283
+## 6  0.06245187 0.08359213 0.02114025
+```
+
+```r
+x=pupa_SSP01$pupaFmean_0
+y=pupa_SSP01$pupaMmean_0
+
+#formula
+varsumSSD= var(x) + var(y) - 2 * cor(x,y) * sd(x) * sd(y)
+varsumSSD
+```
+
+```
+## [1] 0.002636555
+```
 
 
